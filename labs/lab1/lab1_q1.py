@@ -10,6 +10,9 @@ perform analysis for every dataset
 from data.data_utils import load_dataset # include copy of data folder in submission zip
 import numpy as np
 from math import sqrt
+from typing import Callable
+from queue import PriorityQueue as pq
+
 '''
 x train, x valid, x test, y train, y valid, y test = load dataset('mauna loa')
 x train, x valid, x test, y train, y valid, y test = load dataset('rosenbrock', n train=5000, d=2)
@@ -41,9 +44,29 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
     
     np.random.shuffle(joined)
     [shuf_x, shuf_y] = np.split(joined, 2, axis = 1)
-    for i in range(3):
-        print(shuf_x[i], shuf_y[i])
+    
+    return shuf_x, shuf_y
 
+def eval_knn(k_range, x_set:np.ndarray, y_set:np.ndarray, x_test: np.ndarray, y_test:np.ndarray, dist : Callable = l2):
+    # pass in k value, the x and y sets for model and for evaluation, and specify distance metric function
+    sum_cost = 0
+    neighbors = pq() # priority queue sorted by distance to each neighbor
+    costs = [[]*(x_test.size[0])]*k_range # store cost for 
+    '''
+    take a single point from x_test, find its k nearest neighbors using a priority queue
+    pq containts all points in x_set, y_set: compute distance from test point using x value(s),
+    and then store in pq a tuple of (cost, y_value). Return predicted result for x_test point
+    using average of the k nearest neighbors.
+    '''
+    for i in range(x_test.size[0]):
+        testpoint : tuple = (x_test[i], y_test[i])
+        for j in range(x_set.size[0]):
+            pq.put((dist(x_test[i], x_set[j]), y_set[j]))
+        
+        
+
+    return sum_cost
+    
 
 
 # to keep variable naming and code readable, perform regression for each dataset in individual functions
@@ -62,11 +85,24 @@ def knn_mauna():
         y_train = y_train[:-1]
     for i  in range (3):
         print(x_train[i], y_train[i])
+    
+    x_shuf, y_shuf = randomize(x_train, y_train, split_axis = 1)
+    [xt1, xt2, xt3, xt4, xt5] = np.split(x_shuf, 5, axis = 0)
+    [yt1, yt2, yt3, yt4, yt5] = np.split(y_shuf, 5, axis = 0)
+    print(xt1.shape)
+    
+    '''
+    k_NN for all of the five values of k, determine which value of k might work best
+    for each value of k, perform five cross-validations - which value works best?
+    for determining which value works best: calculate sum of l1/l2 distances for a specific method
+    for determining k_NN neighbors, we will use a 'brute force' method that does not consider
+    use of more complex data structures.
+    '''
 
-    [xt1, xt2, xt3, xt4, xt5] = np.split(x_train, 5, axis = 0)
-    randomize(x_train, y_train, split_axis = 1)
+    for k in range(1,6):
+        pass
 
-    # five separate sets of data, 
+    
 
 
 
