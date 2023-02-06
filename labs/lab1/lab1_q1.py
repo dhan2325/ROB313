@@ -101,42 +101,64 @@ def knn_mauna():
     use of more complex data structures.
     '''
 
-    
+    print('\n' + maunua_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vals, 10))
 
     
 
+    
 
-def maunua_cross_val(x_data : list[np.ndarray], y_data : list[np.ndarray], dist : Callable, k : int):
+
+def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dist : Callable, k : int):
     '''
     output the total costs for each value of k in array
     construct queues for each point in the current validation set
     '''
     # take rmse of the costs for all points in validation set, for each value of k
-    k_costs : list[int]= []
+    k_costs = []
     
     for a in range(len(x_data)):
-        pq_list : list[pq] = []
-        costs = [0,0,0,0,0]
+        pq_list : list[pq] = [] # one pq_list for each of the validation points
+        costs = [0] * k
         # separate validation set, training set
         x_val, y_val = x_data[a], y_data[a]
-        x_train, y_train = np.vstack([x_data[:a], x_data[a+1:]]), np.vstack([y_data[:a] + y_data[a+1:]])
-        for i in range(x_val.size[0]):
+        # print(x_val.shape)
+        if (a == 0):
+            b = 1
+        else:
+            b = 0
+        x_train, y_train = x_data[b], y_data[b]
+        for i in range(len(x_data)):
+            if (i!=a) and (i != b):
+                x_train, y_train = np.vstack([x_train, x_data[i]]), np.vstack([y_train, y_data[i]])
+        # x_train, y_train = np.vstack([x_data[:a], x_data[a+1:]]), np.vstack([y_data[:a] + y_data[a+1:]])
+        for i in range(x_val.shape[0]):
             nq = pq()
             x_val_i = x_val[i]
             y_val_i = y_val[i]
 
-            for j in range(x_train.size[0]):
+            for j in range(x_train.shape[0]):
                 # to a single pq, add all points in the training set compared to a single validation point
                 distance = dist(x_val_i, x_train[j])
                 nq.put((distance, y_train[i]))
             short_nq = pq()
-            for _ in range(5):
+            for _ in range(k):
                 short_nq.put(nq.get())
-            pq_list.append(short_nq) # only store five nearest neighbors
+            pq_list.append(short_nq) # only store the k nearest neighbors
+            # get the errors for each value of k
+            y_pred = 0
+            for h in range(1,k+1):
+                new_y = short_nq.get()
+                y_pred = y_pred *(h-1)/h + (new_y[1]) / h
+                costs[h-1] += (y_pred - y_val_i) ** 2
+        for i in range(k):
+            costs[i] = sqrt(costs[i]) # to find RMSE cost of each value of k for the validation set
+        k_costs.append(costs)
+    return k_costs
+        
+                
 
-    
 
-def rmse(true, predictions : list[tuple]):
+def rmse(true, predictions : 'list[tuple]'):
     return 0
 
 
