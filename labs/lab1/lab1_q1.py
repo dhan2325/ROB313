@@ -129,12 +129,10 @@ def maunua_cross_val(x_data : list[np.ndarray], y_data : list[np.ndarray], dist 
                 # to a single pq, add all points in the training set compared to a single validation point
                 distance = dist(x_val_i, x_train[j])
                 nq.put((distance, y_train[i]))
-            # using the pq, determine the error for this particular validation point
-            
-            neighbours = []
-            for b in range(1,k+1):
-                neighbours.append(nq.get())
-                costs[i] += rmse(y_val_i,neighbours)
+            short_nq = pq()
+            for _ in range(5):
+                short_nq.put(nq.get())
+            pq_list.append(short_nq) # only store five nearest neighbors
 
     
 
