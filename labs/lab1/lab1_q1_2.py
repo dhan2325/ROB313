@@ -25,27 +25,22 @@ x train, x valid, x test, y train, y valid, y test = load dataset('mnist small')
 
 def l1_vec(vec1 : np.ndarray, vec2 : np.ndarray):
     assert vec1.shape() == vec2.shape(), "cannot compute distance for vectors of different dimensions"
-    return np.linalg.norm(vec1-vec2, ord = 1)
+    distance = 0
+    for i in range(vec1.shape[0]):
+        distance += abs(vec1[i] - vec2[i])
+    return distance
 
 def l2_vec(vec1 : np.ndarray, vec2 : np.ndarray):
     assert vec1.shape() == vec2.shape(), "cannot compute distance for vectors of different dimensions"
-    return np.linalg.norm(vec1-vec2, ord = 2)
+    distance = 0
+    for i in range(vec1.shape[0]):
+        distance += (vec1[i] - vec2[i])**2
+    return sqrt(distance)
 
 def l1_vals(n1, n2):
     return abs(n1-n2)
 def l2_vals(n1, n2):
     return sqrt((n1-n2)**2)
-
-
-def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
-    assert array_x.shape == array_y.shape
-    joined = np.concatenate((array_x, array_y), axis=split_axis)
-    
-    np.random.shuffle(joined)
-    [shuf_x, shuf_y] = np.split(joined, 2, axis = 1)
-    return shuf_x, shuf_y
-
-    
 
 
 # to keep variable naming and code readable, perform regression for each dataset in individual functions
@@ -65,7 +60,6 @@ def knn_mauna(k_max):
     for i  in range (3):
         print(x_train[i], y_train[i])
     
-    x_train, y_train = randomize(x_train, y_train, split_axis = 1)
     [xt1, xt2, xt3, xt4, xt5] = np.split(x_train, 5, axis = 0)
     [yt1, yt2, yt3, yt4, yt5] = np.split(y_train, 5, axis = 0)
     
@@ -76,7 +70,7 @@ def knn_mauna(k_max):
     for determining k_NN neighbors, we will use a 'brute force' method that does not consider
     use of more complex data structures.
     '''
-    k_costs = maunua_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vals, k_max)
+    k_costs = rosenbrock_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vals, k_max)
     for row in k_costs:
         print(row, '\n')
 
@@ -85,7 +79,7 @@ def knn_mauna(k_max):
     
 
 
-def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dist : Callable, k : int):
+def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dist : Callable, k : int):
     '''
     output the total costs for each value of k in array
     construct queues for each point in the current validation set
