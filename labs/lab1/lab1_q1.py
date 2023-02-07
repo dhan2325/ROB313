@@ -12,6 +12,7 @@ import numpy as np
 from math import sqrt
 from typing import Callable
 from queue import PriorityQueue as pq
+import heapq as hq
 
 '''
 x train, x valid, x test, y train, y valid, y test = load dataset('mauna loa')
@@ -51,28 +52,28 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
     [shuf_x, shuf_y] = np.split(joined, 2, axis = 1)
     return shuf_x, shuf_y
 
-def eval_knn(k_range, x_set:np.ndarray, y_set:np.ndarray, x_test: np.ndarray, y_test:np.ndarray, dist : Callable):
+'''def eval_knn(k_range, x_set:np.ndarray, y_set:np.ndarray, x_test: np.ndarray, y_test:np.ndarray, dist : Callable):
     # pass in k value, the x and y sets for model and for evaluation, and specify distance metric function
     sum_cost = 0
     neighbors = pq() # priority queue sorted by distance to each neighbor
     costs = [[]*(x_test.size[0])]*k_range # store cost for 
-    '''
-    take a single point from x_test, find its k nearest neighbors using a priority queue
-    pq containts all points in x_set, y_set: compute distance from test point using x value(s),
-    and then store in pq a tuple of (cost, y_value). Return predicted result for x_test point
-    using average of the k nearest neighbors.
-    '''
+
+    # take a single point from x_test, find its k nearest neighbors using a priority queue
+    # pq containts all points in x_set, y_set: compute distance from test point using x value(s),
+    # and then store in pq a tuple of (cost, y_value). Return predicted result for x_test point
+    # using average of the k nearest neighbors.
+
     for i in range(x_test.size[0]):
         testpoint : tuple = (x_test[i], y_test[i])
         for j in range(x_set.size[0]):
             pq.put((dist(x_test[i], x_set[j]), y_set[j]))
         
-    return sum_cost
+    return sum_cost'''
     
 
 
 # to keep variable naming and code readable, perform regression for each dataset in individual functions
-def knn_mauna():
+def knn_mauna(k_max):
     x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('mauna_loa') # output is np arrays
     # use single set for validations and training
     # and a separate test for testing (once hyperparameters have been chosen)
@@ -80,7 +81,6 @@ def knn_mauna():
     
     assert x_train.shape == y_train.shape, "training data shape invalid"
     
-
     # want even multiples of five, discarding an insignificant amount of data
     while(x_train.shape[0] %5):
         x_train = x_train[:-1]
@@ -100,8 +100,9 @@ def knn_mauna():
     for determining k_NN neighbors, we will use a 'brute force' method that does not consider
     use of more complex data structures.
     '''
-
-    print('\n' + maunua_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vals, 10))
+    k_costs = maunua_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vals, k_max)
+    for row in k_costs:
+        print(row, '\n')
 
     
 
@@ -139,23 +140,26 @@ def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', d
             for j in range(x_train.shape[0]):
                 # to a single pq, add all points in the training set compared to a single validation point
                 distance = dist(x_val_i, x_train[j])
-                nq.put((distance, y_train[i]))
+                nq.put((distance, y_train[j]))
             short_nq = pq()
             for _ in range(k):
                 short_nq.put(nq.get())
+
+
             pq_list.append(short_nq) # only store the k nearest neighbors
             # get the errors for each value of k
             y_pred = 0
             for h in range(1,k+1):
-                new_y = short_nq.get()
-                y_pred = y_pred *(h-1)/h + (new_y[1]) / h
+                new_y = short_nq.get(block = False)
+                #print(new_y[1])
+                y_pred = y_pred *(h-1)/h + (new_y[1][0]) / h
                 costs[h-1] += (y_pred - y_val_i) ** 2
         for i in range(k):
             costs[i] = sqrt(costs[i]) # to find RMSE cost of each value of k for the validation set
         k_costs.append(costs)
     return k_costs
-        
-                
+
+
 
 
 def rmse(true, predictions : 'list[tuple]'):
@@ -166,4 +170,4 @@ def rmse(true, predictions : 'list[tuple]'):
 
 
 if __name__ == "__main__":
-    knn_mauna()
+    knn_mauna(40)
