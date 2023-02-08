@@ -48,7 +48,7 @@ def knn_puma(k_max):
     
     assert x_train.shape[0] == y_train.shape[0], "training data shape invalid"
     x_train, y_train = randomize(x_train, y_train)
-    print(x_train.shape, y_train.shape)
+    # print(x_train.shape, y_train.shape)
 
     # want even multiples of five, discarding an insignificant amount of data
     while(x_train.shape[0] %5):
@@ -85,7 +85,7 @@ def puma_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dis
     k_costs = []
     
     for a in range(len(x_data)):
-        pq_list : list[pq] = [] # one pq_list for each of the validation points
+        # pq_list : list[pq] = [] # one pq_list for each of the validation points
         costs = [0] * k
         # separate validation set, training set
         x_val, y_val = x_data[a], y_data[a]
@@ -112,16 +112,18 @@ def puma_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dis
             for _ in range(k):
                 short_nq.put(nq.get())
 
-            pq_list.append(short_nq) # only store the k nearest neighbors
+            # pq_list.append(short_nq) # only store the k nearest neighbors
             # get the errors for each value of k
             y_pred = np.array([0] * y_train.shape[1])
             for h in range(1,k+1):
                 new_y = short_nq.get(block = False)
                 y_pred = y_pred *(h-1)/h + (new_y[1]) / h
-                costs[h-1] += np.square(y_val_i - y_pred).mean()
+                #print(y_pred.shape)
+                costs[h-1] += (np.absolute(y_val_i - y_pred)).mean(axis = 0) # mean absolute error for each coord for a single point
         for i in range(k):
-            costs[i] = sqrt(costs[i] / (y_val.shape[0])) # to find RMSE cost of each value of k for the validation set
+            costs[i] = sqrt(costs[i] / (y_val.shape[0])) # divide by number of points, take sqrt
         k_costs.append(costs)
+        print('completed a partition')
     return k_costs
 
 

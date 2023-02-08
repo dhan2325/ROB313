@@ -10,16 +10,26 @@
 
 \maketitle
 
+\section*{Code Organization}
+All scripts make use only of modules either mentioned in the assignment document of inherent to Python 3/Conda. In terms of running the code, each Python file is mean to be run individually to perform a specific (sub)question, and has no dependencies other than assuming that a copy of the data folder provided is also available in the working directory. Some files output to text files and/or produce graphs. MatPlotLib graphs will be shown to the user upon running the script, and text files will be stored in the working directory.
+
 \section{Question 1}
 For question 1, the code was compartmentalized into modular functions. The computing of the L1, L2 norms could be done using \texttt{numpy.linalg.norm()}. RMSE loss was computed manually (without vectorization) without a large hit to the runtime. A single function was written to determine the costs for various values of $k$. The function could be passed a value of $k_max$, and the function would determine the RMSE loss for all values of $k$ from $1$ to $k_max$. The reasoning behind this was that determining the $i$ nearest neighbours would have all the information required to perform the $i-1$ nearest neighbours.
 
 Thus, the functions were written to analyze an entire dataset at once, for multiple different values of $k$, to determine which would produce the smallest RMSE loss.
 
+\subsection{Mauna Loa}
+
 For the Mauna Loa dataset, the x inputs to the model were one dimensional, so the l1 and l2 distance metrics both ended up being the absolute value of the difference in input values. The predicted output for a given x input was the mean (unweighted average) of y values of the $k$ nearest neighbours from the training set. For this dataset, all values of $K \in \{1, 40\}$ were tested for, and $k=2$ consistently yielded the lowest RMSE loss.
 
+\subsection{Rosenbrock}
 Using the Rosenbrock dataset, it was not as immediately obvious which value of $k$ would be best, since for different partitions in the cross-validation, different valus of $k$ provided the least RMSE loss. To determine which value of $k$ would be most likely to consistently produce the required results, the ordering of the imported datset was shuffled randomly before each iteration of the five-fold cross-validation. Even with randomization, one of the five partitions always had significantly greater loss than the rest, suggesting perhaps that there was a single outlier in the data that would always result in one of the partitions having a great loss. After the first few iterations, it became clear that values of $k$ greater than 7 yielded significantly greater losses, so the pool of $k$ values examined was reduced to $\{1,7\}$ to improve runtimes. Using this method, ten different randomizations of the dataset were used, applying five-fold cross-validation to each, it became evident that on average, a $k$ value of 1 yielded the lowest average cost.
 
+\subsection{Puma}
 The Puma arm dataset was more computationally expensive, given that it had a two dimensional input and a 31-dimensional output. The same approach was taken for the third dataset, (larger k always yields better results? probably need to debug code)
+
+\section{Question 2}
+To improve the runtime, a k-dimensional tree (also referred to as a kd-tree) was implemented to store and query for the k nearest neighbours. To do so, the \texttt{sklearn.neighbors.KDTree} class was used. 
 
 
 \end{document}

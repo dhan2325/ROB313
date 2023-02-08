@@ -7,11 +7,9 @@ from time import time
 from sklearn.neighbors import KDTree as kdt
 
 '''
-x train, x valid, x test, y train, y valid, y test = load dataset('mauna loa')
-x train, x valid, x test, y train, y valid, y test = load dataset('rosenbrock', n train=5000, d=2)
-x train, x valid, x test, y train, y valid, y test = load dataset('pumadyn32nm')
-x train, x valid, x test, y train, y valid, y test = load dataset('iris')
-x train, x valid, x test, y train, y valid, y test = load dataset('mnist small')
+perform k_NN regression on the rosenbrock dataset, this time using a k-dimensional tree to store and query for neighbors
+two versions implemented: the priority queue 'brute force' method and a k-dimensional tree, both for k = 5
+runtimes compared using the l2 distance metric
 '''
 
 # l1 is manhattan dist, l2 is euclidian dist
@@ -42,7 +40,7 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
 
 
 
-def knn_rosenbrock(k_max):
+def knn_rosenbrock_kdt(k_max):
     x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('rosenbrock', n_train=1000, d=2)
     # use single set for validations and training
     # and a separate test for testing (once hyperparameters have been chosen)
@@ -67,17 +65,15 @@ def knn_rosenbrock(k_max):
     for determining k_NN neighbors, we will use a 'brute force' method that does not consider
     use of more complex data structures.
     '''
-    k_costs = np.array(rosenbrock_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vec, k_max))
+    k_costs = np.array(rosenbrock_cross_val_kdt([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vec, k_max))
     k_costs.round(decimals = 3)
     return k_costs
 
     
 
-    
-
 # without randomization, one of the cross-val parititions has significantly higher cost
 # could try randomizing ordering before partitioning
-def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dist : Callable, k : int):
+def rosenbrock_cross_val_kdt(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dist : Callable, k : int):
     '''
     output the total costs for each value of k in array
     construct queues for each point in the current validation set
@@ -100,29 +96,7 @@ def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]
             if (i!=a) and (i != b):
                 x_train, y_train = np.vstack([x_train, x_data[i]]), np.vstack([y_train, y_data[i]])
         # x_train, y_train = np.vstack([x_data[:a], x_data[a+1:]]), np.vstack([y_data[:a] + y_data[a+1:]])
-        for i in range(x_val.shape[0]):
-            nq = pq()
-            x_val_i = x_val[i] # (2x1) ndarray
-            y_val_i = y_val[i] # scalar
-
-            for j in range(x_train.shape[0]):
-                # to a single pq, add all points in the training set compared to a single validation point
-                distance = dist(x_val_i, x_train[j])
-                nq.put((distance, y_train[j]))
-            short_nq = pq()
-            for _ in range(k):
-                short_nq.put(nq.get())
-
-            pq_list.append(short_nq) # only store the k nearest neighbors
-            # get the errors for each value of k
-            y_pred = 0
-            for h in range(1,k+1):
-                new_y = short_nq.get(block = False)
-                y_pred = y_pred *(h-1)/h + (new_y[1][0]) / h
-                costs[h-1] += (y_pred - y_val_i) ** 2
-        for i in range(k):
-            costs[i] = sqrt(costs[i]) # to find RMSE cost of each value of k for the validation set
-        k_costs.append(costs)
+        
     return k_costs
 
 
