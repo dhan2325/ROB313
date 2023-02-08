@@ -24,11 +24,11 @@ x train, x valid, x test, y train, y valid, y test = load dataset('mnist small')
 # l1 is manhattan dist, l2 is euclidian dist
 
 def l1_vec(vec1 : np.ndarray, vec2 : np.ndarray):
-    assert vec1.shape() == vec2.shape(), "cannot compute distance for vectors of different dimensions"
+    assert vec1.shape == vec2.shape, "cannot compute distance for vectors of different dimensions"
     return np.linalg.norm(vec1-vec2, ord = 1)
 
 def l2_vec(vec1 : np.ndarray, vec2 : np.ndarray):
-    assert vec1.shape() == vec2.shape(), "cannot compute distance for vectors of different dimensions"
+    assert vec1.shape == vec2.shape, "cannot compute distance for vectors of different dimensions"
     return np.linalg.norm(vec1-vec2, ord = 2)
 
 def l1_vals(n1, n2):

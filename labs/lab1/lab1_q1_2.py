@@ -24,34 +24,40 @@ x train, x valid, x test, y train, y valid, y test = load dataset('mnist small')
 # l1 is manhattan dist, l2 is euclidian dist
 
 def l1_vec(vec1 : np.ndarray, vec2 : np.ndarray):
-    assert vec1.shape() == vec2.shape(), "cannot compute distance for vectors of different dimensions"
-    distance = 0
-    for i in range(vec1.shape[0]):
-        distance += abs(vec1[i] - vec2[i])
-    return distance
-
+    assert vec1.shape == vec2.shape, "cannot compute distance for vectors of different dimensions"
+    return np.linalg.norm(vec1-vec2, ord = 1)
+    
 def l2_vec(vec1 : np.ndarray, vec2 : np.ndarray):
-    assert vec1.shape() == vec2.shape(), "cannot compute distance for vectors of different dimensions"
-    distance = 0
-    for i in range(vec1.shape[0]):
-        distance += (vec1[i] - vec2[i])**2
-    return sqrt(distance)
+    assert vec1.shape == vec2.shape, "cannot compute distance for vectors of different dimensions"
+    return np.linalg.norm(vec1-vec2, ord = 2)
 
 def l1_vals(n1, n2):
     return abs(n1-n2)
+
 def l2_vals(n1, n2):
     return sqrt((n1-n2)**2)
 
+def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
+    assert array_x.shape[0] == array_y.shape[0]
+    print(array_x.shape, array_y.shape)
+    joined = np.concatenate((array_x, array_y), axis=split_axis)
+    
+    np.random.shuffle(joined)
+    [shuf_x, shuf_y] = np.split(joined, [2], axis = 1)
+    print(shuf_x.shape, shuf_y.shape)
+    return shuf_x, shuf_y
 
-# to keep variable naming and code readable, perform regression for each dataset in individual functions
-def knn_mauna(k_max):
-    x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('mauna_loa') # output is np arrays
+
+
+def knn_rosenbrock(k_max):
+    x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('rosenbrock', n_train=1000, d=2)
     # use single set for validations and training
     # and a separate test for testing (once hyperparameters have been chosen)
     x_train, y_train = np.vstack([x_train, x_valid]), np.vstack([y_train, y_valid])
     
-    assert x_train.shape == y_train.shape, "training data shape invalid"
-    
+    assert x_train.shape[0] == y_train.shape[0], "training data shape invalid"
+    x_train, y_train = randomize(x_train, y_train)
+
     # want even multiples of five, discarding an insignificant amount of data
     while(x_train.shape[0] %5):
         x_train = x_train[:-1]
@@ -70,7 +76,8 @@ def knn_mauna(k_max):
     for determining k_NN neighbors, we will use a 'brute force' method that does not consider
     use of more complex data structures.
     '''
-    k_costs = rosenbrock_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vals, k_max)
+    k_costs = np.array(rosenbrock_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vec, k_max))
+    k_costs.round(decimals = 3)
     for row in k_costs:
         print(row, '\n')
 
@@ -78,7 +85,8 @@ def knn_mauna(k_max):
 
     
 
-
+# without randomization, one of the cross-val parititions has significantly higher cost
+# could try randomizing ordering before partitioning
 def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dist : Callable, k : int):
     '''
     output the total costs for each value of k in array
@@ -104,8 +112,8 @@ def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]
         # x_train, y_train = np.vstack([x_data[:a], x_data[a+1:]]), np.vstack([y_data[:a] + y_data[a+1:]])
         for i in range(x_val.shape[0]):
             nq = pq()
-            x_val_i = x_val[i]
-            y_val_i = y_val[i]
+            x_val_i = x_val[i] # (2x1) ndarray
+            y_val_i = y_val[i] # scalar
 
             for j in range(x_train.shape[0]):
                 # to a single pq, add all points in the training set compared to a single validation point
@@ -121,7 +129,7 @@ def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]
             y_pred = 0
             for h in range(1,k+1):
                 new_y = short_nq.get(block = False)
-                #print(new_y[1])
+                print(new_y[1])
                 y_pred = y_pred *(h-1)/h + (new_y[1][0]) / h
                 costs[h-1] += (y_pred - y_val_i) ** 2
         for i in range(k):
@@ -134,4 +142,4 @@ def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]
 
 
 if __name__ == "__main__":
-    knn_mauna(40)
+    knn_rosenbrock(7)
