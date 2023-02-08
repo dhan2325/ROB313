@@ -4,6 +4,7 @@ from math import sqrt
 from typing import Callable
 from queue import PriorityQueue as pq
 from time import time
+from sklearn.neighbors import KDTree as kdt
 
 '''
 x train, x valid, x test, y train, y valid, y test = load dataset('mauna loa')
@@ -31,24 +32,24 @@ def l2_vals(n1, n2):
 
 def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
     assert array_x.shape[0] == array_y.shape[0]
+    print(array_x.shape, array_y.shape)
     joined = np.concatenate((array_x, array_y), axis=split_axis)
     
     np.random.shuffle(joined)
     [shuf_x, shuf_y] = np.split(joined, [2], axis = 1)
+    #print(shuf_x.shape, shuf_y.shape)
     return shuf_x, shuf_y
 
 
 
-def knn_puma(k_max):
-    x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('pumadyn32nm')
+def knn_rosenbrock(k_max):
+    x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('rosenbrock', n_train=1000, d=2)
     # use single set for validations and training
     # and a separate test for testing (once hyperparameters have been chosen)
-    x_train : np.ndarray = np.vstack([x_train, x_valid])
-    y_train: np.ndarray = np.vstack([y_train, y_valid])
+    x_train, y_train = np.vstack([x_train, x_valid]), np.vstack([y_train, y_valid])
     
     assert x_train.shape[0] == y_train.shape[0], "training data shape invalid"
     x_train, y_train = randomize(x_train, y_train)
-    print(x_train.shape, y_train.shape)
 
     # want even multiples of five, discarding an insignificant amount of data
     while(x_train.shape[0] %5):
@@ -66,7 +67,7 @@ def knn_puma(k_max):
     for determining k_NN neighbors, we will use a 'brute force' method that does not consider
     use of more complex data structures.
     '''
-    k_costs = np.array(puma_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vec, k_max))
+    k_costs = np.array(rosenbrock_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vec, k_max))
     k_costs.round(decimals = 3)
     return k_costs
 
@@ -76,7 +77,7 @@ def knn_puma(k_max):
 
 # without randomization, one of the cross-val parititions has significantly higher cost
 # could try randomizing ordering before partitioning
-def puma_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dist : Callable, k : int):
+def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dist : Callable, k : int):
     '''
     output the total costs for each value of k in array
     construct queues for each point in the current validation set
@@ -114,13 +115,13 @@ def puma_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dis
 
             pq_list.append(short_nq) # only store the k nearest neighbors
             # get the errors for each value of k
-            y_pred = np.array([0] * y_train.shape[1])
+            y_pred = 0
             for h in range(1,k+1):
                 new_y = short_nq.get(block = False)
-                y_pred = y_pred *(h-1)/h + (new_y[1]) / h
-                costs[h-1] += np.square(y_val_i - y_pred).mean()
+                y_pred = y_pred *(h-1)/h + (new_y[1][0]) / h
+                costs[h-1] += (y_pred - y_val_i) ** 2
         for i in range(k):
-            costs[i] = sqrt(costs[i] / (y_val.shape[0])) # to find RMSE cost of each value of k for the validation set
+            costs[i] = sqrt(costs[i]) # to find RMSE cost of each value of k for the validation set
         k_costs.append(costs)
     return k_costs
 
@@ -129,13 +130,9 @@ def puma_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dis
 
 
 if __name__ == "__main__":
-    f = open('puma_knn_costs.txt', 'w')
-    k_max = 50
-    start = time()
-    costs = knn_puma(k_max)
-    dur = time() - start
-    f.write("Duration (s): " + str(dur) + '\n')
-    f.write("Max k value tested: " +str(k_max) + '\n\n')
+    f = open('rb_knn_costs.txt', 'w')
+    costs = knn_rosenbrock(7)
+    for _ in range(10):
+        costs += knn_rosenbrock(7)
     f.write(np.array2string(costs))
-
     

@@ -19,5 +19,7 @@ For the Mauna Loa dataset, the x inputs to the model were one dimensional, so th
 
 Using the Rosenbrock dataset, it was not as immediately obvious which value of $k$ would be best, since for different partitions in the cross-validation, different valus of $k$ provided the least RMSE loss. To determine which value of $k$ would be most likely to consistently produce the required results, the ordering of the imported datset was shuffled randomly before each iteration of the five-fold cross-validation. Even with randomization, one of the five partitions always had significantly greater loss than the rest, suggesting perhaps that there was a single outlier in the data that would always result in one of the partitions having a great loss. After the first few iterations, it became clear that values of $k$ greater than 7 yielded significantly greater losses, so the pool of $k$ values examined was reduced to $\{1,7\}$ to improve runtimes. Using this method, ten different randomizations of the dataset were used, applying five-fold cross-validation to each, it became evident that on average, a $k$ value of 1 yielded the lowest average cost.
 
+The Puma arm dataset was more computationally expensive, given that it had a two dimensional input and a 31-dimensional output. The same approach was taken for the third dataset, (larger k always yields better results? probably need to debug code)
+
 
 \end{document}
