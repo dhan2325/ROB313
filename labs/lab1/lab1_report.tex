@@ -1,0 +1,22 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{ROB313}
+\author{Daniel Han}
+\date{January 2023}
+
+\begin{document}
+
+\maketitle
+
+\section{Question 1}
+For question 1, the code was compartmentalized into modular functions. The computing of the L1, L2 norms could be done using \texttt{numpy.linalg.norm()}. RMSE loss was computed manually (without vectorization) without a large hit to the runtime. A single function was written to determine the costs for various values of $k$. The function could be passed a value of $k_max$, and the function would determine the RMSE loss for all values of $k$ from $1$ to $k_max$. The reasoning behind this was that determining the $i$ nearest neighbours would have all the information required to perform the $i-1$ nearest neighbours.
+
+Thus, the functions were written to analyze an entire dataset at once, for multiple different values of $k$, to determine which would produce the smallest RMSE loss.
+
+For the Mauna Loa dataset, the x inputs to the model were one dimensional, so the l1 and l2 distance metrics both ended up being the absolute value of the difference in input values. The predicted output for a given x input was the mean (unweighted average) of y values of the $k$ nearest neighbours from the training set. For this dataset, all values of $K \in \{1, 40\}$ were tested for, and $k=2$ consistently yielded the lowest RMSE loss.
+
+Using the Rosenbrock dataset, it was not as immediately obvious which value of $k$ would be best, since for different partitions in the cross-validation, different valus of $k$ provided the least RMSE loss. To determine which value of $k$ would be most likely to consistently produce the required results, the ordering of the imported datset was shuffled randomly before each iteration of the five-fold cross-validation. Even with randomization, one of the five partitions always had significantly greater loss than the rest, suggesting perhaps that there was a single outlier in the data that would always result in one of the partitions having a great loss. After the first few iterations, it became clear that values of $k$ greater than 7 yielded significantly greater losses, so the pool of $k$ values examined was reduced to $\{1,7\}$ to improve runtimes. 
+
+
+\end{document}
