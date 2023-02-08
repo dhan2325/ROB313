@@ -1,12 +1,3 @@
-'''
-retrieve datasets, split into 5 partitions for cross-validation to check hyperparameters
-in addition, determine which of the l1, l2 metrics yields better RMSE loss
-for each dataset, compute nearest neightbors using 'brute force' - for each element in the dataset,
-determine its distance from every other element in the dataset
-perform analysis for every dataset
-'''
-
-
 from data.data_utils import load_dataset # include copy of data folder in submission zip
 import numpy as np
 from math import sqrt
@@ -44,7 +35,7 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
     
     np.random.shuffle(joined)
     [shuf_x, shuf_y] = np.split(joined, [2], axis = 1)
-    print(shuf_x.shape, shuf_y.shape)
+    #print(shuf_x.shape, shuf_y.shape)
     return shuf_x, shuf_y
 
 
@@ -63,8 +54,6 @@ def knn_rosenbrock(k_max):
         x_train = x_train[:-1]
     while(y_train.shape[0] %5):
         y_train = y_train[:-1]
-    for i  in range (3):
-        print(x_train[i], y_train[i])
     
     [xt1, xt2, xt3, xt4, xt5] = np.split(x_train, 5, axis = 0)
     [yt1, yt2, yt3, yt4, yt5] = np.split(y_train, 5, axis = 0)
@@ -78,8 +67,7 @@ def knn_rosenbrock(k_max):
     '''
     k_costs = np.array(rosenbrock_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vec, k_max))
     k_costs.round(decimals = 3)
-    for row in k_costs:
-        print(row, '\n')
+    return k_costs
 
     
 
@@ -123,13 +111,11 @@ def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]
             for _ in range(k):
                 short_nq.put(nq.get())
 
-
             pq_list.append(short_nq) # only store the k nearest neighbors
             # get the errors for each value of k
             y_pred = 0
             for h in range(1,k+1):
                 new_y = short_nq.get(block = False)
-                print(new_y[1])
                 y_pred = y_pred *(h-1)/h + (new_y[1][0]) / h
                 costs[h-1] += (y_pred - y_val_i) ** 2
         for i in range(k):
@@ -142,4 +128,9 @@ def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]
 
 
 if __name__ == "__main__":
-    knn_rosenbrock(7)
+    f = open('rb_knn_costs.txt', 'w')
+    costs = knn_rosenbrock(7)
+    for _ in range(10):
+        costs += knn_rosenbrock(7)
+    f.write(np.array2string(costs))
+    

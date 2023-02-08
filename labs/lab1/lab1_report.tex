@@ -1,7 +1,8 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
+\setlength{\parskip}{12pt}
 
-\title{ROB313}
+\title{ROB313: Assignment 1}
 \author{Daniel Han}
 \date{January 2023}
 
@@ -16,7 +17,7 @@ Thus, the functions were written to analyze an entire dataset at once, for multi
 
 For the Mauna Loa dataset, the x inputs to the model were one dimensional, so the l1 and l2 distance metrics both ended up being the absolute value of the difference in input values. The predicted output for a given x input was the mean (unweighted average) of y values of the $k$ nearest neighbours from the training set. For this dataset, all values of $K \in \{1, 40\}$ were tested for, and $k=2$ consistently yielded the lowest RMSE loss.
 
-Using the Rosenbrock dataset, it was not as immediately obvious which value of $k$ would be best, since for different partitions in the cross-validation, different valus of $k$ provided the least RMSE loss. To determine which value of $k$ would be most likely to consistently produce the required results, the ordering of the imported datset was shuffled randomly before each iteration of the five-fold cross-validation. Even with randomization, one of the five partitions always had significantly greater loss than the rest, suggesting perhaps that there was a single outlier in the data that would always result in one of the partitions having a great loss. After the first few iterations, it became clear that values of $k$ greater than 7 yielded significantly greater losses, so the pool of $k$ values examined was reduced to $\{1,7\}$ to improve runtimes. 
+Using the Rosenbrock dataset, it was not as immediately obvious which value of $k$ would be best, since for different partitions in the cross-validation, different valus of $k$ provided the least RMSE loss. To determine which value of $k$ would be most likely to consistently produce the required results, the ordering of the imported datset was shuffled randomly before each iteration of the five-fold cross-validation. Even with randomization, one of the five partitions always had significantly greater loss than the rest, suggesting perhaps that there was a single outlier in the data that would always result in one of the partitions having a great loss. After the first few iterations, it became clear that values of $k$ greater than 7 yielded significantly greater losses, so the pool of $k$ values examined was reduced to $\{1,7\}$ to improve runtimes. Using this method, ten different randomizations of the dataset were used, applying five-fold cross-validation to each, it became evident that on average, a $k$ value of 1 yielded the lowest average cost.
 
 
 \end{document}
