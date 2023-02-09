@@ -40,14 +40,15 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
 
 
 
-def knn_rosenbrock(k_max):
+def knn_rosenbrock(k_max : int, shuffle : bool = True):
     x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('rosenbrock', n_train=1000, d=2)
     # use single set for validations and training
     # and a separate test for testing (once hyperparameters have been chosen)
     x_train, y_train = np.vstack([x_train, x_valid]), np.vstack([y_train, y_valid])
     
     assert x_train.shape[0] == y_train.shape[0], "training data shape invalid"
-    x_train, y_train = randomize(x_train, y_train)
+    if shuffle:
+        x_train, y_train = randomize(x_train, y_train)
 
     # want even multiples of five, discarding an insignificant amount of data
     while(x_train.shape[0] %5):

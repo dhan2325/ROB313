@@ -64,7 +64,7 @@ def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', d
     
 
 # to keep variable naming and code readable, perform regression for each dataset in individual functions
-def knn_mauna(k_max):
+def knn_mauna(k_max: int, shuffle : bool = True):
     x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('mauna_loa') # output is np arrays
     # use single set for validations and training
     # and a separate test for testing (once hyperparameters have been chosen)
@@ -80,7 +80,10 @@ def knn_mauna(k_max):
     for i  in range (3):
         print(x_train[i], y_train[i])
     
-    x_train, y_train = randomize(x_train, y_train, split_axis = 1)
+    # option to randomize, set to true by default
+    if shuffle:
+        x_train, y_train = randomize(x_train, y_train, split_axis = 1)
+    
     [xt1, xt2, xt3, xt4, xt5] = np.split(x_train, 5, axis = 0)
     [yt1, yt2, yt3, yt4, yt5] = np.split(y_train, 5, axis = 0)
     
@@ -104,7 +107,7 @@ def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', d
     # take rmse of the costs for all points in validation set, for each value of k
     k_costs = []
     for a in range(len(x_data)):
-        pq_list : list[pq] = [] # one pq_list for each of the validation points
+        #pq_list : list[pq] = [] # one pq_list for each of the validation points
         costs = [0] * k
         # separate validation set, training set
         x_val, y_val = x_data[a], y_data[a]
@@ -131,7 +134,7 @@ def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', d
             for _ in range(k):
                 short_nq.put(nq.get())
 
-            pq_list.append(short_nq) # only store the k nearest neighbors
+            #pq_list.append(short_nq) # only store the k nearest neighbors
             # get the errors for each value of k
             y_pred = 0
             for h in range(1,k+1):

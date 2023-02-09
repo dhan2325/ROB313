@@ -39,7 +39,7 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
 
 
 
-def knn_puma(k_max):
+def knn_puma(k_max : int, shuffle : bool = True):
     x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('pumadyn32nm')
     # use single set for validations and training
     # and a separate test for testing (once hyperparameters have been chosen)
@@ -47,7 +47,8 @@ def knn_puma(k_max):
     y_train: np.ndarray = np.vstack([y_train, y_valid])
     
     assert x_train.shape[0] == y_train.shape[0], "training data shape invalid"
-    x_train, y_train = randomize(x_train, y_train)
+    if shuffle:
+        x_train, y_train = randomize(x_train, y_train)
     # print(x_train.shape, y_train.shape)
 
     # want even multiples of five, discarding an insignificant amount of data
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     f = open('puma_knn_costs.txt', 'w')
     k_max = 50
     start = time()
-    costs = knn_puma(k_max)
+    costs = knn_puma(k_max, shuffle = False)
     dur = time() - start
     f.write("Duration (s): " + str(dur) + '\n')
     f.write("Max k value tested: " +str(k_max) + '\n\n')
