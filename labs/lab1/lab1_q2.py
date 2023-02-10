@@ -40,75 +40,43 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
 
 
 # make class to keep all data accessible in main block
+# for question 2, no cross-validation needed: add validation data to training set, use k = 5
+# no need to randomize/split dataset
 class rosenbrock:
-    def __init__(self): # import dataset
+    def __init__(self, ls : int = 40): # import dataset
         self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(\
             'rosenbrock', n_train=1000, d=2)
         self.y_lookup = {}
+        self.leaf_size = 40
     
 
-    def setup_knn(self, max_k : int = 10):
+    def setup_knn(self):
         self.x_train, self.y_train = np.vstack([self.x_train, self.x_valid]), np.vstack([self.y_train, self.y_valid])
-        self.k_max = max_k
-        # assert x_train.shape[0] == y_train.shape[0], "training data shape invalid"
-        self.x_train, self.y_train = randomize(self.x_train, self.y_train)
+        self.build_kdt()
 
-        # want even multiples of five, discarding an insignificant amount of data
-        while(self.x_train.shape[0] %5):
-            self.x_train = self.x_train[:-1]
-        while(self.y_train.shape[0] %5):
-            self.y_train = self.y_train[:-1]
-        
-        self.x_partit = np.split(self.x_train, 5, axis = 0)
-        self.y_partit = np.split(self.y_train, 5, axis = 0)
-
-        
-        self.k_costs = np.array(self.cross_val_kdt(l2_vec))
-
-    def cross_val_kdt(self, dist : Callable):
+    def build_kdt(self):
         '''
         output the total costs for each value of k in array
         construct queues for each point in the current validation set
         '''
-        # take rmse of the costs for all points in validation set, for each value of k
-        self.kd_trees = []
         self.k_costs = []
-        
         self.y_lookup = {}
-        # create a single dictionary of all points in all datasets
-        for i in range(len(self.x_partit)):
-            for j in range(len(self.x_partit[i])):
-                self.y_lookup[tuple(self.x_partit[i][j])] = self.y_partit[i][j]
-        
-        # print(y_lookup)
-        for a in range(len(self.x_partit)):
-            # form a kdtree for every partition
-            kd_tree = kdt(self.x_partit[a])
-            self.kd_trees.append(kd_tree)
-            # print(kd_tree)
-            costs = [0] * self.k_max
+        self.kd_tree = kdt(self.x_train, leaf_size = self.leaf_size) # keep default at 40
 
-            # sort partitions for the current iteration
-            x_val, y_val = self.x_partit[a], self.y_partit[a]
-            # print(x_val.shape)
-            if (a == 0):
-                b = 1
-            else:
-                b = 0
-            x_train, y_train = self.x_partit[b], self.y_partit[b]
-            for i in range(len(self.x_partit)):
-                if (i!=a) and (i != b):
-                    x_train, y_train = np.vstack([x_train, self.x_partit[i]]), np.vstack([y_train, self.y_partit[i]])
+
+    def get_nn(k): # return two arrays: one for all the x-coords of the nearest neighbours, 
+        pass
+    # TODO: WRITE FUNCTION TO GET K NEAREST NEIGHBOURS
             
         
 
 if __name__ == "__main__":
     rosen = rosenbrock()
-    rosen.setup_knn(max_k = 10)
+    rosen.setup_knn()
     [dist, indices] = rosen.kd_trees[0].query([(0,0)], k = 5)
     print(indices[0])
     for index in indices[0]:
         print(rosen.x_partit[0][index], rosen.y_lookup[tuple(rosen.x_partit[0][index])], '\n ')
-        #print(type(rosen.x_partit[0][index]))
+    
     
     
