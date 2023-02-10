@@ -37,7 +37,7 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
     [shuf_x, shuf_y] = np.split(joined, [2], axis = 1)
     return shuf_x, shuf_y
 
-
+repr
 
 def knn_puma(k_max : int, shuffle : bool = True):
     x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset('pumadyn32nm')
