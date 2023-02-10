@@ -84,7 +84,8 @@ def rosenbrock_cross_val_kdt(x_data : 'list[np.ndarray]', y_data : 'list[np.ndar
     for a in range(len(x_data)):
         pq_list : list[pq] = [] # one pq_list for each of the validation points
         costs = [0] * k
-        # separate validation set, training set
+
+        # sort partitions for the current iteration
         x_val, y_val = x_data[a], y_data[a]
         # print(x_val.shape)
         if (a == 0):
@@ -95,7 +96,9 @@ def rosenbrock_cross_val_kdt(x_data : 'list[np.ndarray]', y_data : 'list[np.ndar
         for i in range(len(x_data)):
             if (i!=a) and (i != b):
                 x_train, y_train = np.vstack([x_train, x_data[i]]), np.vstack([y_train, y_data[i]])
-        # x_train, y_train = np.vstack([x_data[:a], x_data[a+1:]]), np.vstack([y_data[:a] + y_data[a+1:]])
+        
+
+
         
     return k_costs
 
@@ -104,9 +107,5 @@ def rosenbrock_cross_val_kdt(x_data : 'list[np.ndarray]', y_data : 'list[np.ndar
 
 
 if __name__ == "__main__":
-    f = open('rb_knn_costs.txt', 'w')
-    costs = knn_rosenbrock(7)
-    for _ in range(10):
-        costs += knn_rosenbrock(7)
-    f.write(np.array2string(costs))
+    pass
     

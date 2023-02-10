@@ -3,6 +3,7 @@ import numpy as np
 from math import sqrt
 from typing import Callable
 from queue import PriorityQueue as pq
+from time import time
 
 '''
 x train, x valid, x test, y train, y valid, y test = load dataset('mauna loa')
@@ -129,9 +130,12 @@ def rosenbrock_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]
 
 
 if __name__ == "__main__":
+    start = time()
     f = open('rb_knn_costs.txt', 'w')
     costs = knn_rosenbrock(7)
-    for _ in range(10):
-        costs += knn_rosenbrock(7)
+    """ for _ in range(10):
+        costs += knn_rosenbrock(7) """
     f.write(np.array2string(costs))
+    end = time()
+    print("Runtime: " + str(end - start))
     

@@ -3,6 +3,7 @@ import numpy as np
 from math import sqrt
 from typing import Callable
 from queue import PriorityQueue as pq
+from time import time
 
 '''
 x train, x valid, x test, y train, y valid, y test = load dataset('mauna loa')
@@ -150,4 +151,7 @@ def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', d
 
 
 if __name__ == "__main__":
+    start = time()
     knn_mauna(10)
+    end = time()
+    print("Runtime: " + str(end - start))
