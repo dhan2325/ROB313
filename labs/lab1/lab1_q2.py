@@ -5,6 +5,7 @@ from typing import Callable
 from queue import PriorityQueue as pq
 from time import time
 from sklearn.neighbors import KDTree as kdt
+import matplotlib as plt
 
 '''
 perform k_NN regression on the rosenbrock dataset, this time using a k-dimensional tree to store and query for neighbors
@@ -43,9 +44,9 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
 # for question 2, no cross-validation needed: add validation data to training set, use k = 5
 # no need to randomize/split dataset
 class rosenbrock:
-    def __init__(self, ls : int = 40): # import dataset
+    def __init__(self, ls : int = 40, d_val = 2): # import dataset
         self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(\
-            'rosenbrock', n_train=1000, d=2)
+            'rosenbrock', n_train=1000, d=d_val)
         self.y_lookup = {}
         self.leaf_size = 40
     
@@ -64,19 +65,32 @@ class rosenbrock:
         self.kd_tree = kdt(self.x_train, leaf_size = self.leaf_size) # keep default at 40
 
 
-    def get_nn(k): # return two arrays: one for all the x-coords of the nearest neighbours, 
-        pass
-    # TODO: WRITE FUNCTION TO GET K NEAREST NEIGHBOURS
+    def get_nn(self, k_set, points : list[tuple]):
+        # return two arrays: one for all the x-coords of the nearest neighbours, 
+        # another for the y-coords of those nearest neighbours
+        # TODO: WRITE FUNCTION TO GET K NEAREST NEIGHBOURS
+        [dist, indices]  = self.kd_tree.query(points, k = k_set)
+        print(dist)
+        print(indices)
+        x_points = []
+        y_points = []
+        for ind in indices:
+            x_points.append(tuple(self.x_train[ind]))
+            y_points.append(self.y_train[ind]) # since the points are all in order, no need for dict?
+        return x_points, y_points
             
         
 
 if __name__ == "__main__":
-    rosen = rosenbrock()
-    rosen.setup_knn()
-    [dist, indices] = rosen.kd_trees[0].query([(0,0)], k = 5)
-    print(indices[0])
-    for index in indices[0]:
-        print(rosen.x_partit[0][index], rosen.y_lookup[tuple(rosen.x_partit[0][index])], '\n ')
+    d_vals = 10
+    times = [0] * d_vals
+
+    for i in range(3, d_vals):
+        rosen = rosenbrock(d_val=i)
+        rosen.setup_knn()
+        print(type(rosen.x_test))
+        x, y = rosen.get_nn(5, np.array([[0,0,0]]))
+        print(x[0][0], '\n', y[0])
     
     
     
