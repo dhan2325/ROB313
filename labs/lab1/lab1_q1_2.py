@@ -47,6 +47,9 @@ def knn_rosenbrock(k_max : int, shuffle : bool = True):
     # and a separate test for testing (once hyperparameters have been chosen)
     x_train, y_train = np.vstack([x_train, x_valid]), np.vstack([y_train, y_valid])
     
+    for i in range(20):
+        print(x_train[i], y_train[i], '\n')
+
     assert x_train.shape[0] == y_train.shape[0], "training data shape invalid"
     if shuffle:
         x_train, y_train = randomize(x_train, y_train)
@@ -133,8 +136,8 @@ if __name__ == "__main__":
     start = time()
     f = open('rb_knn_costs.txt', 'w')
     costs = knn_rosenbrock(7)
-    """ for _ in range(10):
-        costs += knn_rosenbrock(7) """
+    for _ in range(20):
+        costs += knn_rosenbrock(7)
     f.write(np.array2string(costs))
     end = time()
     print("Runtime: " + str(end - start))
