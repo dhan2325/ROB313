@@ -4,6 +4,9 @@ from math import sqrt
 from typing import Callable
 from queue import PriorityQueue as pq
 from time import time
+import matplotlib.pyplot as plt
+
+np.random.seed = 2325
 
 '''
 x train, x valid, x test, y train, y valid, y test = load dataset('mauna loa')
@@ -48,7 +51,6 @@ def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', d
         costs = [0] * k
         # separate validation set, training set
         x_val, y_val = x_data[a], y_data[a]
-        # print(x_val.shape)
         if (a == 0):
             b = 1
         else:
@@ -78,8 +80,7 @@ def knn_mauna(k_max: int, shuffle : bool = True):
         x_train = x_train[:-1]
     while(y_train.shape[0] %5):
         y_train = y_train[:-1]
-    for i  in range (3):
-        print(x_train[i], y_train[i])
+
     
     # option to randomize, set to true by default
     if shuffle:
@@ -96,8 +97,10 @@ def knn_mauna(k_max: int, shuffle : bool = True):
     use of more complex data structures.
     '''
     k_costs = maunua_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vals, k_max)
-    for row in k_costs:
-        print(row, '\n')
+    """ for row in k_costs:
+        print(row, '\n') """
+    y_pred = mauna_test(x_train, y_train, x_test, k_max)
+    return k_costs, y_pred, x_test # list of arrays holding costs for each k for all partitions
 
 
 def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', dist : Callable, k : int):
@@ -105,12 +108,12 @@ def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', d
     output the total costs for each value of k in array
     construct queues for each point in the current validation set
     '''
+    return 0
     # take rmse of the costs for all points in validation set, for each value of k
     k_costs = []
     for a in range(len(x_data)):
         #pq_list : list[pq] = [] # one pq_list for each of the validation points
-        costs = [0] * k
-        # separate validation set, training set
+        costs = [0] * k    # separate validation set, training set
         x_val, y_val = x_data[a], y_data[a]
         # print(x_val.shape)
         if (a == 0):
@@ -140,18 +143,79 @@ def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', d
             y_pred = 0
             for h in range(1,k+1):
                 new_y = short_nq.get(block = False)
-                #print(new_y[1])
+                # print(new_y[1])
                 y_pred = y_pred *(h-1)/h + (new_y[1][0]) / h
-                costs[h-1] += (y_pred - y_val_i) ** 2
+                prev = costs[h-1]
+                costs[h-1] = prev + (y_pred - y_val_i) ** 2
+                #print(costs[h-1])
         for i in range(k):
             costs[i] = sqrt(costs[i] / x_val.shape[0]) # to find RMSE cost of each value of k for the validation set
         k_costs.append(costs)
     return k_costs
 
+def mauna_test(x_train, y_train, x_test, k):
+    # build the pqs (one for each point in test set)
+    # for each, find y_value using a preset k (less efficient but will work nonetheless)
+    # print(x_val.shape)
+    y_predictions = []
+    print(y_predictions)
+    
+    for i in range(x_test.shape[0]):
+        nq = pq()        
+        x_test_i = x_test[i]
+        
+        for j in range(x_train.shape[0]):
+            # print(x_test_i, x_train[j])
+            dist = l2_vals(x_test_i[0], x_train[j][0])
+            print(dist)
+            nq.put((dist, y_train[j]))
+
+        y_pred = 0
+        cur_preds = []
+        for h in range(1, k+1):
+            new_y = nq.get(block = False)
+            # print(new_y[1][0])
+            prev = y_pred
+            y_pred = prev *((h-1)/h) + ((new_y[1][0]) / h)
+            cur_preds.append(y_pred)
+        y_predictions.append(cur_preds)
+        print(y_predictions)
+    y_predictions = np.array(y_predictions)
+    return y_predictions
+
+
+
+    
 
 
 if __name__ == "__main__":
     start = time()
-    knn_mauna(10)
+    costs, y_predicts, x_test = knn_mauna(40)
+    # costs = np.array(costs)
+    # print(costs)
     end = time()
     print("Runtime: " + str(end - start))
+    """ sum_costs = costs[0]
+    for i in range(1, len(costs)):
+        sum_costs += costs[i] """
+
+    # plot the cross-validation loss across multiple k values
+    """ plt.plot(np.array(range(1,41)), sum_costs/5)
+    plt.title('Costs for Mauna Loa for various k')
+    plt.xlabel('k value')
+    plt.ylabel('average cost across 5-fold cross validation')
+    plt.show()
+    plt.clear() """
+    # plot prediction on test set for various k values
+    # plot the cross-validation loss across multiple k values
+
+
+    """ for i in (1, 2, 5, 10, 20 ,39):
+        y_guess = y_predicts[:,i]
+        plt.plot(x_test, y_guess)
+        plt.show() """
+
+
+
+
+

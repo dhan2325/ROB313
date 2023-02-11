@@ -1,7 +1,7 @@
 from data.data_utils import load_dataset # include copy of data folder in submission zip
 import numpy as np
 from math import sqrt
-from typing import Callable
+from typing import Callable, List
 from queue import PriorityQueue as pq
 from time import time
 from sklearn.neighbors import KDTree as kdt
@@ -65,7 +65,7 @@ class rosenbrock:
         self.kd_tree = kdt(self.x_train, leaf_size = self.leaf_size) # keep default at 40
 
 
-    def get_nn(self, k_set, points : list[tuple]):
+    def get_nn(self, k_set, points : List[tuple]):
         # return two arrays: one for all the x-coords of the nearest neighbours, 
         # another for the y-coords of those nearest neighbours
         # TODO: WRITE FUNCTION TO GET K NEAREST NEIGHBOURS
