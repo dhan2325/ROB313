@@ -67,7 +67,7 @@ def knn_puma(k_max : int, shuffle : bool = True):
     for determining k_NN neighbors, we will use a 'brute force' method that does not consider
     use of more complex data structures.
     '''
-    k_costs = np.array(puma_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l2_vec, k_max))
+    k_costs = np.array(puma_cross_val([xt1, xt2, xt3, xt4, xt5], [yt1, yt2, yt3, yt4, yt5], l1_vec, k_max))
     k_costs.round(decimals = 3)
     return k_costs
 

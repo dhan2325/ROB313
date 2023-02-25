@@ -5,7 +5,7 @@ from typing import Callable, List
 from queue import PriorityQueue as pq
 from time import time
 from sklearn.neighbors import KDTree as kdt
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 '''
 perform k_NN regression on the rosenbrock dataset, this time using a k-dimensional tree to store and query for neighbors
@@ -46,7 +46,7 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
 class rosenbrock:
     def __init__(self, ls : int = 40, d_val = 2): # import dataset
         self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(\
-            'rosenbrock', n_train=1000, d=d_val)
+            'rosenbrock', n_train=5000, d=d_val)
         self.y_lookup = {}
         self.leaf_size = 40
     
@@ -70,8 +70,6 @@ class rosenbrock:
         # another for the y-coords of those nearest neighbours
         # TODO: WRITE FUNCTION TO GET K NEAREST NEIGHBOURS
         [dist, indices]  = self.kd_tree.query(points, k = k_set)
-        print(dist)
-        print(indices)
         x_points = []
         y_points = []
         for ind in indices:
@@ -82,15 +80,27 @@ class rosenbrock:
         
 
 if __name__ == "__main__":
-    d_vals = 10
-    times = [0] * d_vals
+    d_vals = 30
+    times = []
+
+    rosen = rosenbrock(d_val = 2)
+    rosen.setup_knn()
+    x, y = rosen.get_nn(5, np.random.random((5, 2)))
 
     for i in range(3, d_vals):
+        start = time()
         rosen = rosenbrock(d_val=i)
         rosen.setup_knn()
         print(type(rosen.x_test))
-        x, y = rosen.get_nn(5, np.array([[0,0,0]]))
-        print(x[0][0], '\n', y[0])
+        x, y = rosen.get_nn(5, [[0] * i])
+        print(x[0][0], '\n', y[0][0])
+        times.append(time()-start)
+    
+    plt.plot(range(3, d_vals), times)
+    plt.xlabel('Dimensionality of Input')
+    plt.ylabel('Overall Runtime')
+    plt.title('Runtimes for kNN with kd-trees')
+    plt.show()
     
     
     

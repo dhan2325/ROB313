@@ -108,7 +108,6 @@ def maunua_cross_val(x_data : 'list[np.ndarray]', y_data : 'list[np.ndarray]', d
     output the total costs for each value of k in array
     construct queues for each point in the current validation set
     '''
-    return 0
     # take rmse of the costs for all points in validation set, for each value of k
     k_costs = []
     for a in range(len(x_data)):
@@ -158,7 +157,6 @@ def mauna_test(x_train, y_train, x_test, k):
     # for each, find y_value using a preset k (less efficient but will work nonetheless)
     # print(x_val.shape)
     y_predictions = []
-    print(y_predictions)
     
     for i in range(x_test.shape[0]):
         nq = pq()        
@@ -167,19 +165,17 @@ def mauna_test(x_train, y_train, x_test, k):
         for j in range(x_train.shape[0]):
             # print(x_test_i, x_train[j])
             dist = l2_vals(x_test_i[0], x_train[j][0])
-            print(dist)
             nq.put((dist, y_train[j]))
+            
 
         y_pred = 0
         cur_preds = []
         for h in range(1, k+1):
             new_y = nq.get(block = False)
-            # print(new_y[1][0])
             prev = y_pred
-            y_pred = prev *((h-1)/h) + ((new_y[1][0]) / h)
+            y_pred = prev *((h-1)/h) + ((new_y[1]) / h)
             cur_preds.append(y_pred)
         y_predictions.append(cur_preds)
-        print(y_predictions)
     y_predictions = np.array(y_predictions)
     return y_predictions
 
@@ -195,9 +191,12 @@ if __name__ == "__main__":
     # print(costs)
     end = time()
     print("Runtime: " + str(end - start))
-    """ sum_costs = costs[0]
+    sum_costs = costs[0]
     for i in range(1, len(costs)):
-        sum_costs += costs[i] """
+        sum_costs += costs[i]
+    for i in range(len(sum_costs)):
+        sum_costs[i] = sum_costs[i] / len(sum_costs)
+    print(sum_costs)
 
     # plot the cross-validation loss across multiple k values
     """ plt.plot(np.array(range(1,41)), sum_costs/5)
@@ -213,8 +212,11 @@ if __name__ == "__main__":
     """ for i in (1, 2, 5, 10, 20 ,39):
         y_guess = y_predicts[:,i]
         plt.plot(x_test, y_guess)
-        plt.show() """
-
+        plt.title('Predictions for testing set: k = ' + str(i))
+        plt.xlabel('Input value')
+        plt.ylabel('Output value')
+        plt.show()
+ """
 
 
 
