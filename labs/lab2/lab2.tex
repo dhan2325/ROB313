@@ -5,6 +5,10 @@
 \usepackage{graphicx}
 \graphicspath{{./images/}}
 
+\usepackage{mathtools, amssymb, amsmath}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
 \title{ROB313: Assignment 1}
 \author{Daniel Han: 1006842534}
 \date{Feburary 2023}
@@ -14,12 +18,47 @@
 \maketitle
 
 \section*{Question 1}
-\textit{find a closed expression for the vector w or for each term wi}
+To find the $\textbf{w}$ that minimizes the Tikhonov regularized cost, we can follow a similar procedure as in the course notes and take the partial derivative of the regularized cost with respect to the cost vector, and solve for the weight vector when the partial derivative has all components set to zero. To make the process easier, the optimization problem can be rewritten in vector terms as shown below:
+
+\begin{equation}
+\argmin_{\textbf{w} \in \mathbb{R}} \;\;  (\| \textbf{y} - \mathbf{\Phi}\mathbf{w} \|_2^2 + \mathbf{w^T}\mathbf{\Gamma}\mathbf{w})
+\end{equation}
+
+Where the expression which ic being minimized is the regularized cost written in vectoral form. Taking the derviative of this cost with respect to the weight vector, the following expression is derived:
+
+\begin{equation}
+\mathbf{\Phi^T}\mathbf{y} = (\mathbf{\Phi^T \Phi} + \mathbf{\Gamma})\mathbf{w}
+\end{equation}
+
+As one may have expected, the expression is very similar to the expression derived in class to solve for the weight vector using a regularized cost, except the lambda term is replaced by a $\mathbf{\Gamma}$. When the premultiplying term on $\mathbf{w}$ is invertible, there is a unique weight vector $\mathbf{w}_{min}$ that will minimize the regularized cost. If the matrix is non-invertible, a unique solution does not exist and there may exist multiple weight vectors that will yield the minimum regularized cost.
 
 \section*{Question 2}
-\textit{determine computational strategy to solve for $\alpha$ by minimizing the objective function. Can be done by finding critical points using the gradient of the objective wrt $\alpha$?}
+In class, an expression for $\boldsymbol\alpha$ was found using the dual representation in which the loss function was rewritten entirely as a function of $\boldsymbol\alpha$ and $\mathbf{\Phi}$ by expressing the weight vector, $\mathbf{w}$ in terms of $\boldsymbol\alpha$. For the sake of comparison, the values of $\boldsymbol\alpha$ can be estimated by minimizing an objective function written in terms of the vector $\boldsymbol\alpha$ and the kernel terms directly. The regularized cost function to be optimized in terms of $\boldsymbol\alpha$ and the kernel can be written in vectoral form as shown below:
+
+\begin{equation}
+\argmin_{\boldsymbol\alpha \in \mathbb{R}^N} \;\; (\| \mathbf{y} - \mathbf{k(x)}^T\boldsymbol\alpha \|_{2}^2 + \lambda \|\boldsymbol\alpha \|)
+\end{equation}
+
+The objective function can be differentiated with respect to the input vector $\boldsymbol\alpha$, with each component set to zero. For the sake of partial differentiation, the terms in the kernel vector $\mathbf{k}$ are treated as being indeependent on the terms of $\boldsymbol\alpha$, despite both being functions of $\boldsymbol\phi$, the feature vector. Taking the partial derivative as mentioned and equating it to the zero vector yields the following equation (after some rearranging):
+
+\textit{I can't figure this derivative out rn I will get back to this one later tonight?}
+\begin{equation}
+haha
+\end{equation}
 
 \section*{Question 3}
+For the third question, we are forming a Radial Basis Function regression model, (RBF), for which the predictions can be expressed in terms of a kernel $k$ and the alpha vector $\boldsymbol\alpha$:
+
+\begin{equation}
+\hat{f}(\mathbf{x}, \boldsymbol\alpha) = \sum_{i=1}^{N} \alpha_i k(\mathbf{x}, \mathbf{x}^{(i)})
+\end{equation}
+
+For the application at hand, a Gaussian kernel was selected. In order to solve for the value of alpha that would minimize the least-squares loss, the value of $\boldsymbol\alpha$ can determined by setting the gradient of the loss function to zero and solving for the values of $\boldsymbol\alpha$ that satisfy the equation. The following expression for $\boldsymbol\alpha$ can be derived:
+
+\begin{equation}
+\boldsymbol\alpha = (\mathbf{K} + \lambda \mathbf{I})^{-1} \mathbf{y}
+\end{equation}
+
 
 \section*{Question 4}
 
