@@ -3,14 +3,18 @@
 \setlength{\parskip}{12pt}
 
 \usepackage{geometry}
-\geometry{margin = 1in}
+\geometry{margin = 0.7in}
 
+\usepackage{float}
 \usepackage{graphicx}
 \graphicspath{{./images/}}
 
 \usepackage{mathtools, amssymb, amsmath}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
+
+\usepackage{caption}
+\usepackage{subcaption}
 
 \usepackage{listings}
 \lstset{
@@ -64,7 +68,16 @@ For the third question, we are forming a Radial Basis Function regression model,
 \hat{f}(\mathbf{x}, \boldsymbol\alpha) = \sum_{i=1}^{N} \alpha_i k(\mathbf{x}, \mathbf{x}^{(i)})
 \end{equation}
 
-For the application at hand, a Gaussian kernel was selected. In order to solve for the value of alpha that would minimize the least-squares loss, the value of $\boldsymbol\alpha$ can determined by setting the gradient of the loss function to zero and solving for the values of $\boldsymbol\alpha$ that satisfy the equation. The following expression for $\boldsymbol\alpha$ can be derived:
+The model was to be implemented in Python using simple numpy libraries. For the application at hand, an Isotropic Gaussian Kernel was selected. The evaluation of the kernel was done in Python using the following helper functions:
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{kernels}
+\caption{the definition of the RBF class used for validation and testing}
+\end{figure}
+
+ In order to solve for the value of alpha that would minimize the least-squares loss, the value of $\boldsymbol\alpha$ can determined by setting the gradient of the loss function to zero and solving for the values of $\boldsymbol\alpha$ that satisfy the equation. The following expression for $\boldsymbol\alpha$ can be derived:
 
 \begin{equation}
 \boldsymbol\alpha = (\mathbf{K} + \lambda \mathbf{I})^{-1} \mathbf{y}
@@ -84,49 +97,44 @@ The coefficient for regularization, $\lambda$, should always be positive to incr
 
 Thus, an expression for $\boldsymbol\alpha$ is obtained in terms of the desired output $\mathbf{y}$ and the inverse of the Cholesky decomposition of the matrix $\mathbf{K} + \lambda \mathbf{I})$, bypassing the need to perform a direct inversion, which could be more computationally expensive.
 
-To be able to perform the search repeatedly in a python script, an RBF object was defined with fields and methods as shown below:
+To be able to perform the search repeatedly in a python script, an RBF object with a method for performing validation were created as shown below:
 
-\textit{\textbf{UPDATE AS YOU GO}}
-\begin{lstlisting}
-class RBF:
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{rbf_def}
+\caption{the definition of the RBF class used for validation and testing}
+\end{figure}
 
-    def __init__(self, dataset: str, theta : float, reg_factor : float):
-        self.theta = theta
-        self.reg =reg_factor
-        if dataset == 'mauna_loa':
-            self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset)
-        elif dataset == 'rosenbrock':
-            self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset, n_train = 1000, d = 2)
-        else:
-            raise Exception("please enter a valid dataset (mauna_loa or rosenbrock)")
-        
-        # initialize fields arbitrarily, will be set later by setup functions
-        self.K = None
-        self.inv_matrix = None
-        self.N = 0
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{rbf_helper}
+\caption{RBF class methods to perform subtasks}
+\end{figure}
 
-        # setup functions
-        self.find_K()
-        self.find_inv_matrix()
+Using the RBF class and the \verb+run_validation+ class method, the RMSE loss across the dataset was found for various values of $\theta$ and $\lambda$ and the results written to a text file. The code for running validation and the output for both \verb+mauna_loa+ and \verb+rosenbrock+ are shown below.
 
-    def run_algo(self):
-        pass
-    
-    def find_alpha(self, y : np.ndarray):
-        # TODO: find the inverted matrix to get from y to alpha!
-        return np.matmul(self.inv_matrix, y)
-    
-    def find_K(self):
-        self.N = np.shape(self.x_train)[0]
-        print(type(self.N))
-        self.K = np.zeros((self.N, self.N))
-        for i in range(self.N):
-            for j in range (self.N):
-                self.K[i][j] = iso_gaussian(self.x_train[i], self.x_train[j], self.theta)
-    
-    def find_inv_matrix(self):
-        to_invert = self.K + self.reg * np.identity(self.N)
-\end{lstlisting}
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{validation}
+\caption{the code used to evaluate RMSE loss across the grid of hyperparameters}
+\end{figure}
+
+% figure out how to make side-by-side subfigures
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{mauna_loa_val}
+\caption{results of validation across the hyperparamter grid for mauna\_loa}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{rosenbrock_val}
+\caption{results of validation across the hyperparamter grid for rosenbrock}
+\end{figure}
+
+For both datasets, it was evident that increased values of $\lambda$ resulted in greater RMSE values when evaluating for the validation set, and this pattern was consistent even when testing for values of $\lambda$ lower than $0.001$. This finding suggests that our model is not prone to overfitting to the data, and that the introduction of a regularization term may actually be detrimental to the overall performance of the model.
+
+\pagebreak
 \section*{Question 4}
 
 

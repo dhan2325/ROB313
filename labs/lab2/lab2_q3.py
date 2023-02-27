@@ -28,13 +28,6 @@ def aniso_gaussian(x : np.ndarray, z : np.ndarray, theta_inv: np.ndarray):
 
 # ================= code for RBF ========================
 class RBF:
-    '''
-    matrix K is independent of the input, and is formed from the kernels of the training points
-    however, the single kernel term in the cost function must be computes for each test point independently
-    write function to determine K matrix once for the validation set, which will be run once upon init
-    since lambda, K are fixed, evaluate the inverse (using cholesky factorization) once, store in class
-    write function to find alpha for a given point y, using the predetermined inverted matrix
-    '''
     def __init__(self, dataset: str, theta : float, reg_factor : float):
         self.theta = theta
         self.reg =reg_factor
@@ -66,6 +59,11 @@ class RBF:
         loss = math.sqrt(loss / (np.shape(self.x_valid)[0]))
         return loss
 
+    def run_test(self):
+        self.x_train, self.y_train = np.vstack([self.x_train, self.x_valid]), np.vstack([self.y_train, self.y_valid])
+        # very similar procedure to validation, except now we are using the extended training set and measuring against
+        # the training set and not the validation set
+
 
     def set_hyperparams(self, new_theta, new_lambda):
         self.theta = new_theta
@@ -75,11 +73,7 @@ class RBF:
         self.find_K()
         self.find_inv_matrix()
 
-    def run_test(self):
-        self.x_train, self.y_train = np.vstack([self.x_train, self.x_valid]), np.vstack([self.y_train, self.y_valid])
-        # very similar procedure to validation, except now we are using the extended training set and measuring against
-        # the training set and not the validation set
-     
+    
     def find_alpha(self, y : np.ndarray):
         return np.matmul(self.inv_matrix, y)
     
@@ -100,8 +94,9 @@ class RBF:
 
 if __name__ == '__main__':
     thetas = [0.05, 0.1, 0.5, 1, 2]
-    lambdas = [0.001, 0.01, 0.1, 1]
+    lambdas = [0.000001, 0.001, 0.01, 0.1]
     dataset = 'rosenbrock'
+    # looks like for both datasets, the smallest values of theta, lambda yield lowest values of RMSE
     rbf = RBF(dataset, 0.05, 1)
     f = open('q3_' + dataset + '.txt', 'w')
     for t in thetas:
