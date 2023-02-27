@@ -23,7 +23,8 @@ class RBF:
     '''
     matrix K is independent of the input, and is formed from the kernels of the training points
     however, the single kernel term in the cost function must be computes for each test point independently
-    write function to determine K matrix once for the validation set, 
+    write function to determine K matrix once for the validation set, which will be run once upon init
+    
     '''
     def __init__(self, dataset: str, theta : float, reg_factor : float):
         self.theta = theta
