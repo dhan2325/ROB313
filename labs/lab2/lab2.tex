@@ -84,9 +84,9 @@ The coefficient for regularization, $\lambda$, should always be positive to incr
 
 Thus, an expression for $\boldsymbol\alpha$ is obtained in terms of the desired output $\mathbf{y}$ and the inverse of the Cholesky decomposition of the matrix $\mathbf{K} + \lambda \mathbf{I})$, bypassing the need to perform a direct inversion, which could be more computationally expensive.
 
+To be able to perform the search repeatedly in a python script, an RBF object was defined with fields and methods as shown below:
 
-
-
+\textit{\textbf{UPDATE AS YOU GO}}
 \begin{lstlisting}
 class RBF:
 
