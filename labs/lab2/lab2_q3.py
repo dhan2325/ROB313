@@ -97,10 +97,13 @@ if __name__ == '__main__':
     lambdas = [0.000001, 0.001, 0.01, 0.1]
     dataset = 'rosenbrock'
     # looks like for both datasets, the smallest values of theta, lambda yield lowest values of RMSE
+    start = time()
     rbf = RBF(dataset, 0.05, 1)
     f = open('q3_' + dataset + '.txt', 'w')
     for t in thetas:
         for l in lambdas:
             rbf.set_hyperparams(new_theta = t, new_lambda = l)
             f.write('Theta = ' + str(t) + ', Lambda = ' + str(l) + ', RMSE = ' + str(round(rbf.run_validation(), 4)) + '\n')
+    f.write('validation across the hyperparamter grid for ' + dataset + ' took ' + str(round(time()-start, 1)) + 's')
+    f.close()
     
