@@ -2,12 +2,23 @@
 \usepackage[utf8]{inputenc}
 \setlength{\parskip}{12pt}
 
+\usepackage{geometry}
+\geometry{margin = 1in}
+
 \usepackage{graphicx}
 \graphicspath{{./images/}}
 
 \usepackage{mathtools, amssymb, amsmath}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
+
+\usepackage{listings}
+\lstset{
+basicstyle=\small\ttfamily,
+columns=flexible,
+breaklines=true
+}
+
 
 \title{ROB313: Assignment 1}
 \author{Daniel Han: 1006842534}
@@ -59,7 +70,63 @@ For the application at hand, a Gaussian kernel was selected. In order to solve f
 \boldsymbol\alpha = (\mathbf{K} + \lambda \mathbf{I})^{-1} \mathbf{y}
 \end{equation}
 
+The coefficient for regularization, $\lambda$, should always be positive to increase the cost of having terms of large magnitude in the weighting vector. Given then that $\lambda$ is positive, the matrix $\mathbf{K} + \lambda \mathbf{I})^{-1}$ is guaranteed to be positive semi-definite which in turn implies that the matrix is Hermitian. The inverse of a Hermitian matrix can be computed using the Cholesky factorization, which can be performed on a numpy ndarray using \verb+numpy.linalg.cholesky+. The Cholesky factorization can express the matrix in terms of a lower triangular matrix and its conjugate transpose (denoted with the $^*$ operator), for which it is much simpler to compute the inverse of a matrix. Letting $\mathbf{L}$ be a lower diagonal matrix,
 
+\begin{equation}
+(\mathbf{K} + \lambda \mathbf{I}) = \mathbf{L} \mathbf{L}^*
+\end{equation}
+\begin{equation}
+(\mathbf{K} + \lambda \mathbf{I})^{-1} = (\mathbf{L}^{-1})^* \;\mathbf{L}^{-1}
+\end{equation}
+\begin{equation}
+\boldsymbol\alpha = (\mathbf{L}^{-1})^* \;\mathbf{L}^{-1} \mathbf{y}
+\end{equation}
+
+Thus, an expression for $\boldsymbol\alpha$ is obtained in terms of the desired output $\mathbf{y}$ and the inverse of the Cholesky decomposition of the matrix $\mathbf{K} + \lambda \mathbf{I})$, bypassing the need to perform a direct inversion, which could be more computationally expensive.
+
+
+
+
+\begin{lstlisting}
+class RBF:
+
+    def __init__(self, dataset: str, theta : float, reg_factor : float):
+        self.theta = theta
+        self.reg =reg_factor
+        if dataset == 'mauna_loa':
+            self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset)
+        elif dataset == 'rosenbrock':
+            self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset, n_train = 1000, d = 2)
+        else:
+            raise Exception("please enter a valid dataset (mauna_loa or rosenbrock)")
+        
+        # initialize fields arbitrarily, will be set later by setup functions
+        self.K = None
+        self.inv_matrix = None
+        self.N = 0
+
+        # setup functions
+        self.find_K()
+        self.find_inv_matrix()
+
+    def run_algo(self):
+        pass
+    
+    def find_alpha(self, y : np.ndarray):
+        # TODO: find the inverted matrix to get from y to alpha!
+        return np.matmul(self.inv_matrix, y)
+    
+    def find_K(self):
+        self.N = np.shape(self.x_train)[0]
+        print(type(self.N))
+        self.K = np.zeros((self.N, self.N))
+        for i in range(self.N):
+            for j in range (self.N):
+                self.K[i][j] = iso_gaussian(self.x_train[i], self.x_train[j], self.theta)
+    
+    def find_inv_matrix(self):
+        to_invert = self.K + self.reg * np.identity(self.N)
+\end{lstlisting}
 \section*{Question 4}
 
 

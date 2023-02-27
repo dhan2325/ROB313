@@ -24,7 +24,8 @@ class RBF:
     matrix K is independent of the input, and is formed from the kernels of the training points
     however, the single kernel term in the cost function must be computes for each test point independently
     write function to determine K matrix once for the validation set, which will be run once upon init
-    
+    since lambda, K are fixed, evaluate the inverse (using cholesky factorization) once, store in class
+    write function to find alpha for a given point y, using the predetermined inverted matrix
     '''
     def __init__(self, dataset: str, theta : float, reg_factor : float):
         self.theta = theta
@@ -36,24 +37,35 @@ class RBF:
         else:
             raise Exception("please enter a valid dataset (mauna_loa or rosenbrock)")
         
+        # initialize fields arbitrarily, will be set later by setup functions
         self.K = None
+        self.inv_matrix = None
+        self.N = 0
+
+        # setup functions
         self.find_K()
-        for i in range(3):
-            print(self.x_train[i])
+        self.find_inv_matrix()
 
     def run_algo(self):
         pass
     
-    def find_alpha(self):
-        pass
+    def find_alpha(self, y : np.ndarray):
+        return np.matmul(self.inv_matrix, y)
     
     def find_K(self):
-        N = np.shape(self.x_train)[0]
-        print(type(N))
-        self.K = np.zeros((N, N))
-        for i in range(N):
-            for j in range (N):
+        self.N = np.shape(self.x_train)[0]
+        print(type(self.N))
+        self.K = np.zeros((self.N, self.N))
+        for i in range(self.N):
+            for j in range (self.N):
                 self.K[i][j] = iso_gaussian(self.x_train[i], self.x_train[j], self.theta)
+    
+    def find_inv_matrix(self):
+        to_invert = self.K + self.reg * np.identity(self.N)
+        L_inv : np.ndarray = np.linalg.inv(np.linalg.cholesky(to_invert))
+        self.inv_matrix = np.matmul(L_inv.H, L_inv)
+
+        
         
 
 
