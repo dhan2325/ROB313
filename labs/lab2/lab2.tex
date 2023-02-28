@@ -144,11 +144,20 @@ For the fourth question, we were tasked with implementing a greedy algorithm usi
 
 From the plot, a number of observations/claims could be made about the underlying pattern that produced the datapoints as they were observed. Firstly, the evidence shows strongly that there is some sinusoidal/periodic component to the underlying function. Additionally, the average value of the function appears to increase periods. Moreover, the average value across a period seems to increase monotonically at a rate that is somewhat faster than linear (convex). Finally, the magnitude of the oscillations appears to be relatively steady, suggesting that the periodic term and the monotonically increasing terms could be added as opposed to multiplied in the underlying function for the \verb+mauna_loa+ dataset.
 
-From these observations, it made sense to construct a dictionary of basis functions from a set of function classes, and include in the dictionary several permutations from each function class. Each function class could be expressed mathematically as a function of the 'input` of the dataset (which in the context of \verb+mauna_loa+ is a date) and a few parameters that would be set differently for each permutation of the function in the dictionary. Firstly, to capture the periodic component of the underlying function, it was decided that the first class of functions used would be sinusoidal functions, with permutations varying in amplitude ($A$), frequency ($\omega$), and phase offset ($\phi$). Then, to capture the growth in average value across periods, a few different classes were added: a linear class of functions taking a slope parameter ($m$), an exponential class of functions taking offset, vertical scaling factor and horizontal compression factor.
-Finally, rather than including parameters for vertical offset in each function classes, since the vertical offsets in each basis function would add anyways, they were omitted from individual classes and rather the final function class used was the class of linear functions with zero slope, that took a single vertical offset parameter ($b$). The four classes are denoted with $f_i(x)$ and are expressed in terms of their parameters below.
+From these observations, it made sense to construct a dictionary of basis functions from a set of function classes, and include in the dictionary several permutations from each function class. Each function class could be expressed mathematically as a function of the `input' of the dataset (which in the context of \verb+mauna_loa+ is a date) and a few parameters that would be set differently for each permutation of the function in the dictionary. Firstly, to capture the periodic component of the underlying function, it was decided that the first class of functions used would be sinusoidal functions, with permutations varying in amplitude ($a$), frequency ($\omega$), and phase offset ($\phi$). Then, to capture the growth in average value across periods, a few different classes were added: a linear class of functions taking a slope parameter ($m$), an exponential class of functions with parameters, vertical scaling factor ($B$) and horizontal compression factor ($c$).
+Finally, rather than including parameters for vertical offset in each function classes, since the vertical offsets in each basis function would add anyways, they were omitted from individual classes and rather the final function class used was the class of linear functions with zero slope, that took a single vertical offset parameter ($d$). The four classes are denoted with $f_i(x)$ and are expressed in terms of their parameters below.
 
 \begin{equation}
-f_1(x) = A \sin(\omega x - \phi)
+f_1(x) = A \cdot \sin(\omega x - \phi)
+\end{equation}
+\begin{equation}
+f_2(x) = m x
+\end{equation}
+\begin{equation}
+f_3(x) = B \cdot e^{cx}
+\end{equation}
+\begin{equation}
+f_4(x) = d
 \end{equation}
 
 \end{document}
