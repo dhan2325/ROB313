@@ -32,6 +32,7 @@ breaklines=true
 
 \maketitle
 
+\iffalse
 \section*{Question 1}
 To find the $\textbf{w}$ that minimizes the Tikhonov regularized cost, we can follow a similar procedure as in the course notes and take the partial derivative of the regularized cost with respect to the cost vector, and solve for the weight vector when the partial derivative has all components set to zero. To make the process easier, the optimization problem can be rewritten in vector terms as shown below:
 
@@ -135,7 +136,19 @@ Using the RBF class and the \verb+run_validation+ class method, the RMSE loss ac
 For both datasets, it was evident that increased values of $\lambda$ resulted in greater RMSE values when evaluating for the validation set, and this pattern was consistent even when testing for values of $\lambda$ lower than $0.001$. This finding suggests that our model is not prone to overfitting to the data, and that the introduction of a regularization term may actually be detrimental to the overall performance of the model.
 
 \pagebreak
+\fi
 \section*{Question 4}
+For the fourth question, we were tasked with implementing a greedy algorithm using a set of basis functions of our own design. In order to make justifiable decisions regarding the selection of basis functions, the \verb+mauna_loa+ dataset was plotted in order to make observations about the dataset (plot provided below). In order to form a set of basis functions, it was assumed that there was some underlying function for the dataset, and that each data point was sampled from this underlying function (with the addition of some error). With this assumption, by observing the data, one could presumably construct a numeric function from a set of basis functions that closely resembles the underlying function, rendering our model effective in interpolation and extrapolation.
 
+% provide figure here!!!!
+
+From the plot, a number of observations/claims could be made about the underlying pattern that produced the datapoints as they were observed. Firstly, the evidence shows strongly that there is some sinusoidal/periodic component to the underlying function. Additionally, the average value of the function appears to increase periods. Moreover, the average value across a period seems to increase monotonically at a rate that is somewhat faster than linear (convex). Finally, the magnitude of the oscillations appears to be relatively steady, suggesting that the periodic term and the monotonically increasing terms could be added as opposed to multiplied in the underlying function for the \verb+mauna_loa+ dataset.
+
+From these observations, it made sense to construct a dictionary of basis functions from a set of function classes, and include in the dictionary several permutations from each function class. Each function class could be expressed mathematically as a function of the 'input` of the dataset (which in the context of \verb+mauna_loa+ is a date) and a few parameters that would be set differently for each permutation of the function in the dictionary. Firstly, to capture the periodic component of the underlying function, it was decided that the first class of functions used would be sinusoidal functions, with permutations varying in amplitude ($A$), frequency ($\omega$), and phase offset ($\phi$). Then, to capture the growth in average value across periods, a few different classes were added: a linear class of functions taking a slope parameter ($m$), an exponential class of functions taking offset, vertical scaling factor and horizontal compression factor.
+Finally, rather than including parameters for vertical offset in each function classes, since the vertical offsets in each basis function would add anyways, they were omitted from individual classes and rather the final function class used was the class of linear functions with zero slope, that took a single vertical offset parameter ($b$). The four classes are denoted with $f_i(x)$ and are expressed in terms of their parameters below.
+
+\begin{equation}
+f_1(x) = A \sin(\omega x - \phi)
+\end{equation}
 
 \end{document}
