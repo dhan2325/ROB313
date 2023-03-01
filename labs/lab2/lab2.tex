@@ -32,8 +32,8 @@ breaklines=true
 
 \maketitle
 
-\iffalse
-\section*{Question 1}
+\iftrue
+\section{Thikonov Regularization}
 To find the $\textbf{w}$ that minimizes the Tikhonov regularized cost, we can follow a similar procedure as in the course notes and take the partial derivative of the regularized cost with respect to the cost vector, and solve for the weight vector when the partial derivative has all components set to zero. To make the process easier, the optimization problem can be rewritten in vector terms as shown below:
 
 \begin{equation}
@@ -48,7 +48,7 @@ Where the expression which ic being minimized is the regularized cost written in
 
 As one may have expected, the expression is very similar to the expression derived in class to solve for the weight vector using a regularized cost, except the lambda term is replaced by a $\mathbf{\Gamma}$. When the premultiplying term on $\mathbf{w}$ is invertible, there is a unique weight vector $\mathbf{w}_{min}$ that will minimize the regularized cost. If the matrix is non-invertible, a unique solution does not exist and there may exist multiple weight vectors that will yield the minimum regularized cost.
 
-\section*{Question 2}
+\section{Minimizing Objective Function}
 In class, an expression for $\boldsymbol\alpha$ was found using the dual representation in which the loss function was rewritten entirely as a function of $\boldsymbol\alpha$ and $\mathbf{\Phi}$ by expressing the weight vector, $\mathbf{w}$ in terms of $\boldsymbol\alpha$. For the sake of comparison, the values of $\boldsymbol\alpha$ can be estimated by minimizing an objective function written in terms of the vector $\boldsymbol\alpha$ and the kernel terms directly. The regularized cost function to be optimized in terms of $\boldsymbol\alpha$ and the kernel can be written in vectoral form as shown below:
 
 \begin{equation}
@@ -62,7 +62,7 @@ The objective function can be differentiated with respect to the input vector $\
 haha
 \end{equation}
 
-\section*{Question 3}
+\section{Radial Basis Function with Gaussian Kernel}
 For the third question, we are forming a Radial Basis Function regression model, (RBF), for which the predictions can be expressed in terms of a kernel $k$ and the alpha vector $\boldsymbol\alpha$:
 
 \begin{equation}
@@ -120,24 +120,44 @@ Using the RBF class and the \verb+run_validation+ class method, the RMSE loss ac
 \caption{the code used to evaluate RMSE loss across the grid of hyperparameters}
 \end{figure}
 
-% figure out how to make side-by-side subfigures
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.55]{mauna_loa_val}
-\caption{results of validation across the hyperparamter grid for mauna\_loa}
-\end{figure}
+% insert tables for the validation RMSE across the two hyperparams for both datasets
 
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.55]{rosenbrock_val}
-\caption{results of validation across the hyperparamter grid for rosenbrock}
-\end{figure}
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+ & $\theta$ = 0.05 & 0.1 & 0.5 & 1 & 2 \\ \hline
+ $\lambda$ = 0.001  & \textbf{0.0738} & 0.0739 & 0.0753 & 0.0751 & 0.0752\\ \hline
+ 0.01 & \textbf{0.0738} & 0.0742 & 0.0753 & 0.0752 & 0.0752\\ \hline
+ 0.1 & 0.0739 & 0.0745 & 0.0753 & 0.0754 & 0.0752\\ \hline
+ 1 & 0.0768 & 0.0778 & 0.0781 & 0.0774 & 0.0787\\
+ \hline
+\end{tabular}
+\caption{RMSE cross the validation set for mauna\_loa using different hyperparameters}
+\end{center}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+ & $\theta$ = 0.05 & 0.1 & 0.5 & 1 & 2 \\ \hline
+ $\lambda$ = 0.001  & \\ \hline
+ 0.01 &\\ \hline
+ 0.1 & \\ \hline
+ 1 & \\
+ \hline
+\end{tabular}
+\caption{RMSE cross the validation set for rosenbrock using different hyperparameters}
+\end{center}
+\end{table}
+
 
 For both datasets, it was evident that increased values of $\lambda$ resulted in greater RMSE values when evaluating for the validation set, and this pattern was consistent even when testing for values of $\lambda$ lower than $0.001$. This finding suggests that our model is not prone to overfitting to the data, and that the introduction of a regularization term may actually be detrimental to the overall performance of the model.
 
 \pagebreak
 \fi
-\section*{Question 4}
+\section{Basis Function Dictionary}
 For the fourth question, we were tasked with implementing a greedy algorithm using a set of basis functions of our own design. In order to make justifiable decisions regarding the selection of basis functions, the \verb+mauna_loa+ dataset was plotted in order to make observations about the dataset (plot provided below). In order to form a set of basis functions, it was assumed that there was some underlying function for the dataset, and that each data point was sampled from this underlying function (with the addition of some error). With this assumption, by observing the data, one could presumably construct a numeric function from a set of basis functions that closely resembles the underlying function, rendering our model effective in interpolation and extrapolation.
 
 % provide figure here!!!!

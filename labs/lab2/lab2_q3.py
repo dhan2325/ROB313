@@ -2,6 +2,7 @@ from data.data_utils import load_dataset # include copy of data folder in submis
 import numpy as np
 from time import time
 import math
+from matplotlib import pyplot as plt
 
 '''
 construct a RBF model to minimize least-squares loss function, using a guassian kernel. Consider different values of theta and regularization parameters
@@ -28,7 +29,7 @@ def aniso_gaussian(x : np.ndarray, z : np.ndarray, theta_inv: np.ndarray):
 
 # ================= code for RBF ========================
 class RBF:
-    def __init__(self, dataset: str, theta : float, reg_factor : float):
+    def __init__(self, dataset: str, theta : float, reg_factor : float, test = False):
         self.theta = theta
         self.reg =reg_factor
         if dataset == 'mauna_loa':
@@ -37,6 +38,8 @@ class RBF:
             self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset, n_train = 1000, d = 2)
         else:
             raise Exception("please enter a valid dataset (mauna_loa or rosenbrock)")
+        
+        self.test = test
         
         # initialize fields arbitrarily, will be set later by setup functions
         self.set_hyperparams(theta, reg_factor)
@@ -48,7 +51,6 @@ class RBF:
             # for the given datasets, x data points can be 1 or 2 dimensional, but output is always a scalar
             x, y = self.x_train[i], self.y_train[i][0]
             
-
             f_hat = 0
             for j in range(self.N):
                 # will take gaussian of the test point x with all N training points
@@ -60,18 +62,39 @@ class RBF:
         return loss
 
     def run_test(self):
+        # setup for merged training set
+        xt, yt = self.x_train, self.y_train
         self.x_train, self.y_train = np.vstack([self.x_train, self.x_valid]), np.vstack([self.y_train, self.y_valid])
-        # very similar procedure to validation, except now we are using the extended training set and measuring against
-        # the training set and not the validation set
-
+        self.set_hyperparams(self.theta, self.reg)
+        self.find_K()
+        self.find_inv_matrix()
+        alpha = self.find_alpha(self.y_train)
+        
+        loss = 0
+        for i in range(np.shape(self.x_test)[0]): # for each point in validation set
+            # for the given datasets, x data points can be 1 or 2 dimensional, but output is always a scalar
+            x, y = self.x_train[i], self.y_train[i][0]
+            
+            f_hat = 0
+            for j in range(np.shape(self.x_train)[0]):
+                # will take gaussian of the test point x with all N training points
+                f_hat += alpha[j] * iso_gaussian(x, self.x_train[j], self.theta)
+            
+            loss += (f_hat - y) ** 2
+        
+        self.x_train, self.y_train = xt, yt
+        loss = math.sqrt(loss / (np.shape(self.x_valid)[0]))
+        return loss
 
     def set_hyperparams(self, new_theta, new_lambda):
+        # sets and updates everything except for alpha, which is dependent on testing point
         self.theta = new_theta
         self.reg = new_lambda # lambda is a keyword in python goddammit
 
         # will have to compute the K and inv_matrix again
-        self.find_K()
-        self.find_inv_matrix()
+        if not self.test:
+            self.find_K()
+            self.find_inv_matrix()
 
     
     def find_alpha(self, y : np.ndarray):
@@ -94,10 +117,11 @@ class RBF:
 
 if __name__ == '__main__':
     thetas = [0.05, 0.1, 0.5, 1, 2]
-    lambdas = [0.000001, 0.001, 0.01, 0.1]
-    dataset = 'rosenbrock'
+    lambdas = [0.001, 0.01, 0.1, 1]
+    dataset = 'mauna_loa'
     # looks like for both datasets, the smallest values of theta, lambda yield lowest values of RMSE
     start = time()
+
     rbf = RBF(dataset, 0.05, 1)
     f = open('q3_' + dataset + '.txt', 'w')
     for t in thetas:
@@ -106,4 +130,8 @@ if __name__ == '__main__':
             f.write('Theta = ' + str(t) + ', Lambda = ' + str(l) + ', RMSE = ' + str(round(rbf.run_validation(), 4)) + '\n')
     f.write('validation across the hyperparamter grid for ' + dataset + ' took ' + str(round(time()-start, 1)) + 's')
     f.close()
+
+    """ rbf = RBF(dataset, 0.05, 0.001, test = True) # best hyperparams for both datasets
+    print(rbf.run_test()) """
+    
     
