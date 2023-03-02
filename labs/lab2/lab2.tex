@@ -32,7 +32,7 @@ breaklines=true
 
 \maketitle
 
-\iftrue
+
 \section{Thikonov Regularization}
 To find the $\textbf{w}$ that minimizes the Tikhonov regularized cost, we can follow a similar procedure as in the course notes and take the partial derivative of the regularized cost with respect to the cost vector, and solve for the weight vector when the partial derivative has all components set to zero. To make the process easier, the optimization problem can be rewritten in vector terms as shown below:
 
@@ -62,6 +62,7 @@ The objective function can be differentiated with respect to the input vector $\
 haha
 \end{equation}
 
+\iffalse
 \section{Radial Basis Function with Gaussian Kernel}
 For the third question, we are forming a Radial Basis Function regression model, (RBF), for which the predictions can be expressed in terms of a kernel $k$ and the alpha vector $\boldsymbol\alpha$:
 
