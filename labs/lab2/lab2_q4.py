@@ -67,19 +67,23 @@ class OMP:
         self.selec = []
         self.k = 0
         self.r = self.y_train # initializing r_0
-        self.eps = eps
+        self.N = self.x_train.size
+        self.eps = 0 # if first prediction equals zero
         self.md = max_depth
-        self.Phi = None
-        self.w = np.zeros((np.shape(self.x_train)[0],1))
+        self.Phi = 0
+        self.w = np.zeros((np.shape(self.x_train)[0],1)) # arbitrary
     
-    def select_cand(self):
+    def select_cand(self) -> basis_func:
         if len(self.cands) == 0:
             raise Exception('no more candidates')
             return
-        j_min, argmin = None, None
+        j_min, argmin = 0, None
         elem : basis_func
+        
+        #TODO: find first one manually to avoid errors
+
         for elem in self.cands:
-            if (j_min == None):
+            if (j_min == 0):
                 j_min = find_j(elem.phi, self.r)
                 argmin = elem
             else:
@@ -92,18 +96,27 @@ class OMP:
         return argmin
     
     def run_omp(self):
-        while np.linalg.norm(self.w, 2) > self.eps:
+        while np.linalg.norm(self.r, 2) >= self.eps:
+            print('iterating...')
             if self.k > self.md:
                 assert('reached depth before acceptable error')
             self.k += 1
-            new_selec = self.select_cand()
-            if self.Phi == None:
-                self.Phi = new_selec
+            new_selec : basis_func = self.select_cand()
+            if self.Phi == 0:
+                self.Phi = new_selec.phi
             else:
-                self.Phi = np.vstack(self.Phi, new_selec)
-            self.w = np.linalg.solve(self.phi, self.y_train) # i think we look for approximation and not solution? this will not work
+                self.Phi = np.vstack(self.Phi, new_selec.phi)
+            
+            self.w = np.linalg.pinv(self.Phi).dot(self.y_train)
+            self.r = self.Phi.dot(self.w) - self.y_train
+            print()
 
-        return self.w, self.selec
+            self.eps = self.stop_crit()
+        return self.w, self.Phi
+    
+    def stop_crit(self):
+        loss = np.linalg.norm((self.Phi * self.w - self.y_train), 2) ** 2
+        return (self.N/2) * math.log(loss) + (self.k/2) * math.log(self.N)
 
 
 # args[i] : [func_class, (max param_i, min param_i, step_size_i)]
@@ -117,7 +130,6 @@ def build_basis(args, input_vec):
             omega, omega_max, omega_step = arg[2][0], arg[2][1], arg[2][2]
             phi, phi_max, phi_step = arg[3][0], arg[3][1], arg[3][2]
             while A <= A_max:
-                print(A)
                 omega = arg[2][0]
                 while omega <= omega_max:
                     phi = arg[3][0]
@@ -159,7 +171,7 @@ def build_basis(args, input_vec):
 def find_j(phi_i : np.ndarray, resid : np.ndarray):
     """ numer = (np.transpose(phi_i) * resid)**2
     denom = np.matmul(np.transpose(phi_i), phi_i) """
-    return ((np.transpose(phi_i) * resid)**2) / (np.matmul(np.transpose(phi_i), phi_i))
+    return ((np.transpose(phi_i).dot(resid))**2) / (np.matmul(np.transpose(phi_i), phi_i))
 
 def stop_crit(N,  ls_loss, k):
     return (N/2) * math.log(ls_loss) + (k/2) * math.log(N)
@@ -181,4 +193,6 @@ if __name__ == '__main__':
     
     # print(optim.cands)
     print(len(optim.cands), 'basis functions in dictionary, after ' + str(time() - start) + 's')
+
+    optim.run_omp()
 

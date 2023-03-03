@@ -3,6 +3,7 @@ import numpy as np
 from time import time
 import math
 from matplotlib import pyplot as plt
+import scipy.linalg as lin
 
 '''
 construct a RBF model to minimize least-squares loss function, using a guassian kernel. Consider different values of theta and regularization parameters
@@ -21,7 +22,16 @@ the anisotropic version is provided for completeness
 '''
 
 def iso_gaussian(x : np.ndarray, z : np.ndarray, theta : float):
-    return math.exp(-(np.linalg.norm((x-z), 2) ** 2) / theta)
+    # transpose z: column minus row means np will automatically expand dimensions into an NxM matrix
+    # take element-wise difference, divide all terms by theta, and perform element-wise exponentiation to build gram matrix
+    if np.shape(x)[1] == 1:
+        return np.exp(-np.square(x-np.transpose(z))/theta)
+    # for 2D inputs?
+    else:
+        x =  np.expand_dims(x, axis = 1) # x is 1000 x 2
+        z = np.expand_dims(z, axis = 0) # x is 1000 x 2
+        # print(np.shape(np.exp(-np.square(x -z)/theta)))
+        return np.exp(-np.sum(np.square(x-z)/theta, axis = 2, keepdims = False))
 
 def aniso_gaussian(x : np.ndarray, z : np.ndarray, theta_inv: np.ndarray):
     return math.exp(-np.matmul(np.transpose(x-z), np.matmul(theta_inv, (x-z))))
@@ -40,77 +50,29 @@ class RBF:
             raise Exception("please enter a valid dataset (mauna_loa or rosenbrock)")
         
         self.test = test
-        
+        self.inv_matrix, self.K = None, None
         # initialize fields arbitrarily, will be set later by setup functions
-        self.set_hyperparams(theta, reg_factor)
 
-    def run_validation(self):
-        loss = 0
-        alpha = self.find_alpha(self.y_train) # alpha is determined for all the desired outputs for a set of inputs
-        for i in range(np.shape(self.x_valid)[0]): # for each point in validation set
-            # for the given datasets, x data points can be 1 or 2 dimensional, but output is always a scalar
-            x, y = self.x_train[i], self.y_train[i][0]
-            
-            f_hat = 0
-            for j in range(self.N):
-                # will take gaussian of the test point x with all N training points
-                f_hat += alpha[j] * iso_gaussian(x, self.x_train[j], self.theta)
-            
-            loss += (f_hat - y) ** 2
-        
-        loss = math.sqrt(loss / (np.shape(self.x_valid)[0]))
-        return loss
+        if self.test:
+            self.x_train, self.y_train = np.vstack([self.x_train, self.x_valid]), np.vstack([self.y_train, self.y_valid])
+            self.K = iso_gaussian(self.x_train, self.x_train, self.theta) # gram matrix from training data
+            self.C = lin.cho_factor(self.K + self.reg * np.identity(np.shape(self.x_train)[0])) # decomposition of (K + lambda * I)
+            self.alpha = lin.cho_solve(self.C, self.y_train) # solve system of equations for alpha given y
+            self.pred = iso_gaussian(self.x_test, self.x_train, self.theta).dot(self.alpha)
+            # last line, we determine the gram matrix for the test input, and dot it with alpha to find the prediction
+        else:
+            self.K = iso_gaussian(self.x_train, self.x_train, self.theta)
+            self.C = lin.cho_factor(self.K + self.reg * np.identity(np.shape(self.x_train)[0]))
+            self.alpha = lin.cho_solve(self.C, self.y_train)
+            self.pred = iso_gaussian(self.x_valid, self.x_train, self.theta).dot(self.alpha)
 
-    def run_test(self):
-        # setup for merged training set
-        xt, yt = self.x_train, self.y_train
-        self.x_train, self.y_train = np.vstack([self.x_train, self.x_valid]), np.vstack([self.y_train, self.y_valid])
-        self.set_hyperparams(self.theta, self.reg)
-        self.find_K()
-        self.find_inv_matrix()
-        alpha = self.find_alpha(self.y_train)
-        
-        loss = 0
-        for i in range(np.shape(self.x_test)[0]): # for each point in validation set
-            # for the given datasets, x data points can be 1 or 2 dimensional, but output is always a scalar
-            x, y = self.x_train[i], self.y_train[i][0]
-            
-            f_hat = 0
-            for j in range(np.shape(self.x_train)[0]):
-                # will take gaussian of the test point x with all N training points
-                f_hat += alpha[j] * iso_gaussian(x, self.x_train[j], self.theta)
-            
-            loss += (f_hat - y) ** 2
-        
-        self.x_train, self.y_train = xt, yt
-        loss = math.sqrt(loss / (np.shape(self.x_valid)[0]))
-        return loss
-
-    def set_hyperparams(self, new_theta, new_lambda):
-        # sets and updates everything except for alpha, which is dependent on testing point
-        self.theta = new_theta
-        self.reg = new_lambda # lambda is a keyword in python goddammit
-
-        # will have to compute the K and inv_matrix again
+    def get_rmse(self):
         if not self.test:
-            self.find_K()
-            self.find_inv_matrix()
+            return np.linalg.norm(self.pred - self.y_valid) / math.sqrt(self.pred.size)
+        else:
+            return np.linalg.norm(self.pred - self.y_test) / math.sqrt(self.pred.size)
+            
 
-    
-    def find_alpha(self, y : np.ndarray):
-        return np.matmul(self.inv_matrix, y)
-    
-    def find_K(self):
-        self.N = np.shape(self.x_train)[0]
-        self.K = np.zeros((self.N, self.N))
-        for i in range(self.N):
-            for j in range (self.N):
-                self.K[i][j] = iso_gaussian(self.x_train[i], self.x_train[j], self.theta)
-    
-    def find_inv_matrix(self):
-        to_invert = self.K + self.reg * np.identity(self.N)
-        L_inv : np.ndarray = np.linalg.inv(np.linalg.cholesky(to_invert))
-        self.inv_matrix = np.matmul(np.conj(L_inv).transpose(), L_inv)
         
         
 
@@ -118,20 +80,20 @@ class RBF:
 if __name__ == '__main__':
     thetas = [0.05, 0.1, 0.5, 1, 2]
     lambdas = [0.001, 0.01, 0.1, 1]
-    dataset = 'mauna_loa'
+    dataset = 'rosenbrock'
     # looks like for both datasets, the smallest values of theta, lambda yield lowest values of RMSE
     start = time()
 
-    rbf = RBF(dataset, 0.05, 1)
+    """ rbf = RBF(dataset, 0.05, 1)
     f = open('q3_' + dataset + '.txt', 'w')
-    for t in thetas:
-        for l in lambdas:
-            rbf.set_hyperparams(new_theta = t, new_lambda = l)
-            f.write('Theta = ' + str(t) + ', Lambda = ' + str(l) + ', RMSE = ' + str(round(rbf.run_validation(), 4)) + '\n')
+    for l in lambdas:
+        for t in thetas:
+            rbf= RBF(dataset, t, l, test = False)
+            f.write('Theta = ' + str(t) + ', Lambda = ' + str(l) + ', RMSE = ' + str(round(rbf.get_rmse(), 4)) + '\n')
     f.write('validation across the hyperparamter grid for ' + dataset + ' took ' + str(round(time()-start, 1)) + 's')
-    f.close()
+    f.close() """
 
-    """ rbf = RBF(dataset, 0.05, 0.001, test = True) # best hyperparams for both datasets
-    print(rbf.run_test()) """
+    rbf = RBF(dataset, 1, 0.001, test = True) # enter best hyperparams for each dataset
+    print(rbf.get_rmse())
     
     
