@@ -14,10 +14,13 @@ class plotter_1d:
         self.x_plot, self.y_plot = np.vstack([x_train, x_valid]), np.vstack([y_train, y_valid])
     
     def show(self):
-        plt.plot(self.x_plot, self.y_plot, 'o', markersize = 2)
+        plt.plot(self.x_plot, self.y_plot, 'o', markersize = 2, color = (0,0,1))
         plt.xlabel('input data')
         plt.ylabel('output data')
         plt.show()
+    
+    def plot_more(self, x, y):
+        plt.plot(x, y, marker = 'o', color = (1,0,0))
 
 # ======= for performing MDL =========:
 # func classes: 'sin', 'lin', 'exp', 'hor'
@@ -27,24 +30,28 @@ lin: params = [m]
 exp: params = [B, c]
 hor: params = [d]
 '''
+
+# vectorized calculations work
 class basis_func:
-    def __init__(self, params, func_class, input_vec):
+    def __init__(self, params, func_class, input_vec: np.ndarray):
         self.params = params
         self.func_class = func_class
         N = np.shape(input_vec)[0]
         self.phi = np.zeros((N, 1))
-        for i in range(N):
-            self.phi[i] = self.evalute(input_vec[i])
+        self.phi = self.evalute(input_vec)
     
+    # use vectorized version
     def evalute(self, x):
         if self.func_class == 'sin':
-            return self.params[0] * math.sin(math.radians(self.params[1] * x - self.params[2]))
+            return self.params[0] * np.sin((self.params[1] * x - self.params[2]))
         elif self.func_class == 'lin':
             return self.params[0] * x
         elif self.func_class == 'exp':
-            return self.params[0] * math.exp(self.params[1] * x)
+            return self.params[0] * np.exp(self.params[1] * x)
         elif self.func_class == 'hor':
-            return self.params[0]
+            return np.full(np.shape(x), self.params[0])
+        elif self.func_class == 'quad':
+            return self.params[0] * np.square(x - np.full(np.shape(x), self.params[1]))
         else:
             raise Exception('invalid function class')
     
@@ -68,54 +75,57 @@ class OMP:
         self.k = 0
         self.r = self.y_train # initializing r_0
         self.N = self.x_train.size
-        self.eps = 0 # if first prediction equals zero
+        self.eps = eps # if first prediction equals zero
         self.md = max_depth
-        self.Phi = 0
+        self.Phi = np.zeros(np.shape(self.x_train))
         self.w = np.zeros((np.shape(self.x_train)[0],1)) # arbitrary
     
     def select_cand(self) -> basis_func:
         if len(self.cands) == 0:
             raise Exception('no more candidates')
             return
-        j_min, argmin = 0, None
+        j_max, argmax = 0, self.cands[0]
         elem : basis_func
-        
-        #TODO: find first one manually to avoid errors
+        elem = self.cands[0]
+        j_max = find_j(elem.phi, self.r)
 
         for elem in self.cands:
-            if (j_min == 0):
-                j_min = find_j(elem.phi, self.r)
-                argmin = elem
-            else:
-                cur_j = find_j(elem.phi, self.r)
-                if cur_j < j_min:
-                    j_min = cur_j
-                    argmin = elem
-        self.cands.remove(argmin)
-        self.selec.append(argmin)
-        return argmin
+            cur_j = find_j(elem.phi, self.r)
+            if cur_j > j_max:
+                j_max = cur_j
+                argmax = elem
+        self.cands.remove(argmax)
+        self.selec.append(argmax)
+        return argmax
     
     def run_omp(self):
-        while np.linalg.norm(self.r, 2) >= self.eps:
-            print('iterating...')
-            if self.k > self.md:
-                assert('reached depth before acceptable error')
-            self.k += 1
-            new_selec : basis_func = self.select_cand()
-            if self.Phi == 0:
-                self.Phi = new_selec.phi
-            else:
-                self.Phi = np.vstack(self.Phi, new_selec.phi)
-            
-            self.w = np.linalg.pinv(self.Phi).dot(self.y_train)
-            self.r = self.Phi.dot(self.w) - self.y_train
-            print()
-
-            self.eps = self.stop_crit()
+        # perform first ieration regardless of stop_crit
+        # print('iterating...')
+        self.omp_iter()
+        while self.stop_crit() > self.eps:
+        # for _ in range(2):
+            self.omp_iter()
         return self.w, self.Phi
     
-    def stop_crit(self):
-        loss = np.linalg.norm((self.Phi * self.w - self.y_train), 2) ** 2
+    def omp_iter(self):
+        if self.k > self.md:
+            raise Exception('reached depth before acceptable error')
+        self.k += 1
+        new_selec : basis_func = self.select_cand()
+        print(self.k, new_selec)
+        if not np.any(self.Phi):
+            self.Phi = new_selec.phi
+        else:
+            self.Phi = np.hstack([self.Phi, new_selec.phi]) # append it?
+        # print(np.shape(self.Phi))
+        
+        self.w = np.linalg.pinv(self.Phi).dot(self.y_train)
+        self.r = self.Phi.dot(self.w) - self.y_train
+        print(self.stop_crit(), self.eps)
+
+    def stop_crit(self): # iterate while this is greater than epsilon
+        # print(np.shape(self.Phi), np.shape(self.w), np.shape(self.y_train))
+        loss = np.linalg.norm((self.Phi).dot(self.w) - self.y_train, 2)
         return (self.N/2) * math.log(loss) + (self.k/2) * math.log(self.N)
 
 
@@ -146,7 +156,16 @@ def build_basis(args, input_vec):
                 size+= 1
                 m += m_step
 
-
+        if func_class == 'quad':
+            a, a_max, a_step = arg[1][0], arg[1][1], arg[1][2]
+            b, b_max, b_step = arg[1][0], arg[1][1], arg[1][2]
+            while a < a_max:
+                b = arg[1][0]
+                while b < b_max:
+                    basis.append(basis_func([a, b], 'quad', input_vec))
+                    size += 1
+                    b += b_step
+                a += a_step
         if func_class == 'hor':
             d, d_max, d_step = arg[1][0], arg[1][1], arg[1][2]
             while d <= d_max:
@@ -173,26 +192,38 @@ def find_j(phi_i : np.ndarray, resid : np.ndarray):
     denom = np.matmul(np.transpose(phi_i), phi_i) """
     return ((np.transpose(phi_i).dot(resid))**2) / (np.matmul(np.transpose(phi_i), phi_i))
 
-def stop_crit(N,  ls_loss, k):
-    return (N/2) * math.log(ls_loss) + (k/2) * math.log(N)
 
 if __name__ == '__main__':
-    """ plotter = plotter_1d()
-    plotter.show()
- """
+    
+
     # TODO: set values for these parameters!
     # no exponential for now. If linear sucks, we'll try exponential
     # 1259 basis functions in about 2.5 seconds, can adjust granularity later
+
+    # since the weight vector is a scalar multiplicative, all I need is a single linear, a singel horizontal,
+    # and no amplitude for sin!
     args = [
-        ['sin', [0.05, 0.2, 0.025],  [2*math.pi/0.08, 2*math.pi/0.04, 5], [math.pi/2, 3*math.pi/2, math.pi/ 10]],
-        ['lin', [0.6, 1.4, 0.05]],
-        ['hor', [-0.2, 0, 0.02]],
+        ['sin', [0.05, 0.4, 1],  [100, 115, 1], [math.pi/2, 3*math.pi/2, math.pi/ 16]],
+        ['lin', [0.6, 1.4, 0.01]],
+        ['quad', [0.1, 0.5, 0.05], [-2, -1, 0.05]],
+        ['hor', [-0.2, 0, 0.01]]
     ]
     start = time()
-    optim = OMP(args, 'mauna_loa', 0, 0, merge_sets=False)
+    optim = OMP(args, 'mauna_loa', 200, 10000, merge_sets=True)
     
     # print(optim.cands)
     print(len(optim.cands), 'basis functions in dictionary, after ' + str(time() - start) + 's')
 
-    optim.run_omp()
+    weights, kernels = optim.run_omp()
+    plotter = plotter_1d()
+    pred = kernels.dot(weights)
+    plotter.plot_more(optim.x_train, pred)
+    plotter.show()
+
+
+    """ test = np.array([0.5, 1, 2, 3])
+    sin = basis_func([1, 2, 3], 'sin', test)
+    lin = basis_func([1.2], 'lin', test)
+    hor = basis_func([1], 'hor', test)
+    print(sin.phi, lin.phi, hor.phi) """
 
