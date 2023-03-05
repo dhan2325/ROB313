@@ -39,6 +39,9 @@ def aniso_gaussian(x : np.ndarray, z : np.ndarray, theta_inv: np.ndarray):
 
 # ================= code for RBF ========================
 class RBF:
+    '''
+    RBF class will create an RBF model using the theta and lambda (reg_factor) provided
+    '''
     def __init__(self, dataset: str, theta : float, reg_factor : float, test = False):
         self.theta = theta
         self.reg =reg_factor

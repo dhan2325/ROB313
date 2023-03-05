@@ -46,7 +46,13 @@ Where the expression which ic being minimized is the regularized cost written in
 \mathbf{\Phi^T}\mathbf{y} = (\mathbf{\Phi^T \Phi} + \mathbf{\Gamma})\mathbf{w}
 \end{equation}
 
-As one may have expected, the expression is very similar to the expression derived in class to solve for the weight vector using a regularized cost, except the lambda term is replaced by a $\mathbf{\Gamma}$. When the premultiplying term on $\mathbf{w}$ is invertible, there is a unique weight vector $\mathbf{w}_{min}$ that will minimize the regularized cost. If the matrix is non-invertible, a unique solution does not exist and there may exist multiple weight vectors that will yield the minimum regularized cost.
+As one may have expected, the expression is very similar to the expression derived in class to solve for the weight vector using a regularized cost, except the lambda term is replaced by a $\mathbf{\Gamma}$. When the premultiplying term on $\mathbf{w}$ is invertible, there is a unique weight vector $\mathbf{w}_{min}$ that will minimize the regularized cost. If the matrix is non-invertible, a unique solution does not exist and there may exist multiple weight vectors that will yield the minimum regularized cost. However, $\boldsymbol\Gamma$ is PSD (positive semi-definite), and since $\boldsymbol\Phi$ is symmetric, $\boldsymbol\Phi^T \boldsymbol\Phi$ must also bs PSD. Since the sum of PSD matrices is also PSD, the premultiplicative matrix is guaranteed to have an inverse, meaning the unique solution for $\mathbf{w}$ can be expressed as:
+
+\begin{equation}
+\mathbf{w} = (\mathbf{\Phi^T \Phi} + \mathbf{\Gamma})^{-1}\mathbf{\Phi^T}\mathbf{y}
+\end{equation}
+
+For which the inverse can be computed using a singular value decomposition.
 
 \section{Minimizing Objective Function}
 In class, an expression for $\boldsymbol\alpha$ was found using the dual representation in which the loss function was rewritten entirely as a function of $\boldsymbol\alpha$ and $\mathbf{\Phi}$ by expressing the weight vector, $\mathbf{w}$ in terms of $\boldsymbol\alpha$. For the sake of comparison, the values of $\boldsymbol\alpha$ can be estimated by minimizing an objective function written in terms of the vector $\boldsymbol\alpha$ and the kernel terms directly. The regularized cost function to be optimized in terms of $\boldsymbol\alpha$ and the kernel can be written in vectoral form as shown below:
@@ -66,6 +72,8 @@ If the matrix premultiplying alpha can be proven to be invertible, then the valu
 \begin{equation}
 \boldsymbol\alpha = (\mathbf{KK} + \lambda \mathbf{I})^{-1}\mathbf{Ky}
 \end{equation}
+
+The expression is different than the one obtained with the dual formulation. The expression obtained above treats each of the kernel evaluations as one of $N$ features, whose weights are being optimized for (with an added regularization $\lambda$ term). In the Dual formation, the weights being regularized are associated with features in the Reproducing Kernel Hilbert Space.
 
 \iftrue
 \section{Radial Basis Function with Gaussian Kernel}
@@ -162,28 +170,33 @@ For both datasets, the optimal value of $\lambda$ was 0.001, the smallest value 
 
 \pagebreak
 \fi
-\section{Basis Function Dictionary}
+\section{Orthogonal Matching Pursuit}
 For the fourth question, we were tasked with implementing a greedy algorithm using a set of basis functions of our own design. In order to make justifiable decisions regarding the selection of basis functions, the \verb+mauna_loa+ dataset was plotted in order to make observations about the dataset (plot provided below). In order to form a set of basis functions, it was assumed that there was some underlying function for the dataset, and that each data point was sampled from this underlying function (with the addition of some error). With this assumption, by observing the data, one could presumably construct a numeric function from a set of basis functions that closely resembles the underlying function, rendering our model effective in interpolation and extrapolation.
 
-% provide figure here!!!!
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{mauna_loa}
+\caption{a plot of the training and validation datapoints for mauna\_loa}
+\end{figure}
 
 From the plot, a number of observations/claims could be made about the underlying pattern that produced the datapoints as they were observed. Firstly, the evidence shows strongly that there is some sinusoidal/periodic component to the underlying function. Additionally, the average value of the function appears to increase periods. Moreover, the average value across a period seems to increase monotonically at a rate that is somewhat faster than linear (convex). Finally, the magnitude of the oscillations appears to be relatively steady, suggesting that the periodic term and the monotonically increasing terms could be added as opposed to multiplied in the underlying function for the \verb+mauna_loa+ dataset.
 
-From these observations, it made sense to construct a dictionary of basis functions from a set of function classes, and include in the dictionary several permutations from each function class. Each function class could be expressed mathematically as a function of the `input' of the dataset (which in the context of \verb+mauna_loa+ is a date) and a few parameters that would be set differently for each permutation of the function in the dictionary. Firstly, to capture the periodic component of the underlying function, it was decided that the first class of functions used would be sinusoidal functions, with permutations varying in amplitude ($a$), frequency ($\omega$), and phase offset ($\phi$). Then, to capture the growth in average value across periods, a few different classes were added: a linear class of functions taking a slope parameter ($m$), an exponential class of functions with parameters, vertical scaling factor ($B$) and horizontal compression factor ($c$).
-Finally, rather than including parameters for vertical offset in each function classes, since the vertical offsets in each basis function would add anyways, they were omitted from individual classes and rather the final function class used was the class of linear functions with zero slope, that took a single vertical offset parameter ($d$). The four classes are denoted with $f_i(x)$ and are expressed in terms of their parameters below.
+From these observations, it made sense to construct a dictionary of basis functions from a set of function classes, and include in the dictionary several permutations from each function class. Each function class could be expressed mathematically as a function of the `input' of the dataset (which in the context of \verb+mauna_loa+ is a date) and a few parameters that would be set differently for each permutation of the function in the dictionary. The different function classes used are explained below with their respective parameters:
 
-\begin{equation}
-f_1(x) = A \cdot \sin(\omega x - \phi)
-\end{equation}
-\begin{equation}
-f_2(x) = m x
-\end{equation}
-\begin{equation}
-f_3(x) = B \cdot e^{cx}
-\end{equation}
-\begin{equation}
-f_4(x) = d
-\end{equation}
+\begin{itemize}
+\item $y=A * \sin(\omega x - \phi)$, a sinusoid with parameters for angular frequency, horizontal offset
+\item $ y=mx$, a linear function with a slope parameter
+\item $ y=a (x - b)^2$, a quadratic function with a vertical scaling and a horizontal offset
+\item $ y=d$, a constant vertical offset
+\end{itemize}
+
+Since the weight vector would be determined so that the vertical scaling of each basis function would produce the least squares, paramters for the vertical stretch of the functions could end up being redundant (add an unnceessary degree of freedom), but did not affect the results. A python class was formulated to differentiate between the various basis functions.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{basis_class}
+\caption{the definition of the RBF class used for validation and testing}
+\end{figure}
 
 With a dictionary of basis functions well-defined, the OMP algorithm could be applied. The $k^{th}$ iteration of the algorithm followed the steps outlined below:
 
@@ -191,14 +204,42 @@ With a dictionary of basis functions well-defined, the OMP algorithm could be ap
 \item pick a new basis function from the list of unused basis functions with the greatest $J$ metric
 \item add the selected basis function to the list of basis functions in use, and remove it from the list of basis functions being used
 \item solve for the new weight vector. Since the $\Phi$ matrix was not full rank, the pseudoinverse of $\Phi$ was determined to find the weighting of each basis function that would minimize the least-squares loss of the prediction.
-\item with the new basis and weights, determine the new residual and iterate until the residual is below a certain threshold defined by $\epsilon$
+\item with the new basis and weights, determine the new residual and iterate until the stopping criterion is begins to increase in value (adding new features results in overfitting)
 \end{itemize}
 
-The expression for the metrioc $J$ is provided below:
+The expression for the metric $J$ is provided below:
 \begin{equation}
 J(\phi_i) = \frac{(\mathbf{\Phi}(:,i)^T\mathbf{r}^{(k)})^2}{\mathbf{\Phi}(:,i)^T\mathbf{\Phi}(:,i)}
 \end{equation}
 
-In terms of implementation in \verb+python3+, I defined a basis object to make the code simpler to read. Then, by inspection, I determined the range I suspected the true value of each parameter should be, and created a basis of functions across the range. For the first run, to save runtime, the exponenetial family of functions was left out. Even then, the first dictionary has 1259 basis functions in it.
+The dictionary of basis functions was created by defining ranges for each parameter for each of the basis functions. Each parameters was assigned a minimum and maximum values along with a step size parameter determining how finely to sample for the given paramter. The function for creating the initial basis is depicted below. Additionally, a python class was created for the OMP aglorithm, to store  information about the algorithm (iteration number $k$, updated matrix $\Phi$, etc.), and methods were defined to run an iteration of OMP and to select a candidate from the candidacy list.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{build_basis}
+\caption{function used to add functions to the basis using a grid of paramters for each function class}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{omp_class}
+\caption{class defined to efficiently and cleanly run the OMP optimization}
+\end{figure}
+
+The optimization algorithm ended up selecting 7 functions from the basis of over 400. The algorithm begins be selecting a linear function, then a a sinusoidal to model the gener periodic and increasing trend of the data. Then, the algorithm selects a quadratic function to account for the non-linear growth of the amplitude and a horizontal to counter the offset introduced by the quadratic. Finally, the algorithm adds a few more sinusoidal terms and stops the iteration after 7 functions have been added.
+
+Using the computed features and weights to predict on the test set, it was noted that the selected function appeared to model the trend with less accuracy when extrapolating (all test data points were extrapolations as opposed to interpolations). Still, the test set predictions had an RMSE value of 0.056, indicating the model performs reasonably well.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.55]{test_meth}
+\caption{OMP object method for predicting on the test dataset and determining RMSE}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.37]{omp_test}
+\caption{OMP model's extrapolation vs the test dataset}
+\end{figure}
 
 \end{document}

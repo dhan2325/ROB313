@@ -5,25 +5,30 @@ import math
 from matplotlib import pyplot as plt
 from typing import List
 
-# ========== data analysis ============
+# ========== data analysis/plotting ============
 class plotter_1d:
-    def __init__(self, ds : str = 'mauna_loa'):
-        x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset(ds)
+    def __init__(self, ds : str = 'mauna_loa', ms = 1):
+        x_train, x_valid, self.x_test, y_train, y_valid, self.y_test = load_dataset(ds)
 
         # to ensure independence from testing set, plot only validation and training sets
         self.x_plot, self.y_plot = np.vstack([x_train, x_valid]), np.vstack([y_train, y_valid])
+        self.ms = ms
     
     def show(self):
-        plt.plot(self.x_plot, self.y_plot, 'o', markersize = 2, color = (0,0,1))
-        plt.xlabel('input data')
-        plt.ylabel('output data')
+        plt.xlabel('input value')
+        plt.ylabel('output value')
+        # plt.legend(['Model Prediction', "Test Data"])
         plt.show()
     
+    def plot_train(self):
+        plt.plot(self.x_plot, self.y_plot, marker = 'o', markersize =self.ms, color = (0,0,1), linestyle = None)
     def plot_more(self, x, y):
-        plt.plot(x, y, marker = 'o', color = (1,0,0))
+        plt.plot(x, y,  color = (1,0,0))
+    def plot_test(self):
+        plt.plot(self.x_test, self.y_test, marker = 'o', markersize = self.ms, color = (0,0,1), linestyle = None, linewidth = 0)
 
 # ======= for performing MDL =========:
-# func classes: 'sin', 'lin', 'exp', 'hor'
+# func classes: 'sin', 'lin', 'quad', 'hor'
 '''
 sin: params = [A, omega, phi]
 lin: params = [m]
@@ -31,7 +36,7 @@ exp: params = [B, c]
 hor: params = [d]
 '''
 
-# vectorized calculations work
+# ================= the basis functions class ==============
 class basis_func:
     def __init__(self, params, func_class, input_vec: np.ndarray):
         self.params = params
@@ -46,8 +51,7 @@ class basis_func:
             return self.params[0] * np.sin((self.params[1] * x - self.params[2]))
         elif self.func_class == 'lin':
             return self.params[0] * x
-        elif self.func_class == 'exp':
-            return self.params[0] * np.exp(self.params[1] * x)
+
         elif self.func_class == 'hor':
             return np.full(np.shape(x), self.params[0])
         elif self.func_class == 'quad':
@@ -62,25 +66,12 @@ class basis_func:
         return (self.func_class == other.func_class) and (self.params == other.params)
 
 
+# ============ Class for Orthogonal matching pursuit ===========
 class OMP:
-    def __init__(self, args, dataset, eps, max_depth, merge_sets = False,):
-        assert(dataset == 'mauna_loa')
-        self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset)
-        
-        if merge_sets:
-            self.x_train, self.y_train = np.vstack([self.x_train, self.x_valid]), np.vstack([self.y_train, self.y_valid])
-        
-        self.cands, self.N = build_basis(args, input_vec = self.x_train)
-        self.selec = []
-        self.k = 0
-        self.r = self.y_train # initializing r_0
-        self.N = self.x_train.size
-        self.eps = eps # if first prediction equals zero
-        self.md = max_depth
-        self.Phi = np.zeros(np.shape(self.x_train))
-        self.w = np.zeros((np.shape(self.x_train)[0],1)) # arbitrary
-    
     def select_cand(self) -> basis_func:
+        '''
+        select a candidate from one of the remaining candidates based on J values
+        '''
         if len(self.cands) == 0:
             raise Exception('no more candidates')
             return
@@ -99,15 +90,21 @@ class OMP:
         return argmax
     
     def run_omp(self):
-        # perform first ieration regardless of stop_crit
-        # print('iterating...')
+        '''
+        method is called once setup is complete, runs iterations of OMP algorithm
+        until the stopping criterion's value is minimized (i.e. it begins to increase again)
+        '''
         self.omp_iter()
-        while self.stop_crit() > self.eps:
+        while self.stop_crit() < self.eps:
         # for _ in range(2):
+            self.eps = self.stop_crit()
             self.omp_iter()
         return self.w, self.Phi
     
     def omp_iter(self):
+        '''
+        performs a single iteration of OMP
+        '''
         if self.k > self.md:
             raise Exception('reached depth before acceptable error')
         self.k += 1
@@ -123,14 +120,51 @@ class OMP:
         self.r = self.Phi.dot(self.w) - self.y_train
         print(self.stop_crit(), self.eps)
 
-    def stop_crit(self): # iterate while this is greater than epsilon
+    def stop_crit(self):
+        '''
+        helper function to evaluate stopping criterion value
+        '''
         # print(np.shape(self.Phi), np.shape(self.w), np.shape(self.y_train))
         loss = np.linalg.norm((self.Phi).dot(self.w) - self.y_train, 2)
         return (self.N/2) * math.log(loss) + (self.k/2) * math.log(self.N)
+    
+    def test(self):
+        '''
+        function to compare extrapolation of model to test data and print the RMSE of the test
+        '''
+        # for each data point in the test set, evaluate estimated output as sum of output of all selected candidates
+        y_pred = np.zeros(np.shape(self.x_test))
+        for i in range(len(self.selec)):
+            cand = self.selec[i]
+            re_eval = basis_func(cand.params, cand.func_class, self.x_test)
+            y_pred += self.w[i] * (re_eval.phi)
+        self.test_pred = y_pred
+        print(math.sqrt(np.square(self.test_pred -self.y_test).mean()))
+
+    def __init__(self, args, dataset, eps, max_depth, merge_sets = False,):
+        assert(dataset == 'mauna_loa')
+        self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset)
+        
+        if merge_sets:
+            self.x_train, self.y_train = np.vstack([self.x_train, self.x_valid]), np.vstack([self.y_train, self.y_valid])
+        
+        self.cands, self.N = build_basis(args, input_vec = self.x_train)
+        self.selec = []
+        self.k = 0
+        self.r = self.y_train # initializing r_0
+        self.N = self.x_train.size
+        self.eps = 1000000 # if first prediction equals zero
+        self.md = max_depth
+        self.Phi = np.zeros(np.shape(self.x_train))
+        self.w = np.zeros((np.shape(self.x_train)[0],1)) # arbitrary
 
 
-# args[i] : [func_class, (max param_i, min param_i, step_size_i)]
 def build_basis(args, input_vec):
+    '''
+    builds a dictionary of basis functions using the arguments passed in
+    arguments are passed in the following fashion:
+    args[i] : [func_class, (max param_i, min param_i, step_size_i)]
+    '''
     basis  : List[basis_func] = []
     size = 0
     for arg in args:
@@ -188,20 +222,16 @@ def build_basis(args, input_vec):
 
 
 def find_j(phi_i : np.ndarray, resid : np.ndarray):
-    """ numer = (np.transpose(phi_i) * resid)**2
-    denom = np.matmul(np.transpose(phi_i), phi_i) """
+    '''
+    helper function to evaluate J for a given phi and residual
+    '''
     return ((np.transpose(phi_i).dot(resid))**2) / (np.matmul(np.transpose(phi_i), phi_i))
 
 
 if __name__ == '__main__':
-    
-
-    # TODO: set values for these parameters!
-    # no exponential for now. If linear sucks, we'll try exponential
-    # 1259 basis functions in about 2.5 seconds, can adjust granularity later
-
-    # since the weight vector is a scalar multiplicative, all I need is a single linear, a singel horizontal,
-    # and no amplitude for sin!
+    '''
+    main block instantiates the OMP object and performs all necessary tests
+    '''
     args = [
         ['sin', [0.05, 0.4, 1],  [100, 115, 1], [math.pi/2, 3*math.pi/2, math.pi/ 16]],
         ['lin', [0.6, 1.4, 0.01]],
@@ -215,15 +245,12 @@ if __name__ == '__main__':
     print(len(optim.cands), 'basis functions in dictionary, after ' + str(time() - start) + 's')
 
     weights, kernels = optim.run_omp()
-    plotter = plotter_1d()
+    optim.test()
+    
+    plotter = plotter_1d(ms = 5)
     pred = kernels.dot(weights)
-    plotter.plot_more(optim.x_train, pred)
+    # plotter.plot_more(optim.x_train, pred)
+    plotter.plot_more(optim.x_test, optim.test_pred)
+    plotter.plot_test()
     plotter.show()
-
-
-    """ test = np.array([0.5, 1, 2, 3])
-    sin = basis_func([1, 2, 3], 'sin', test)
-    lin = basis_func([1.2], 'lin', test)
-    hor = basis_func([1], 'hor', test)
-    print(sin.phi, lin.phi, hor.phi) """
 
