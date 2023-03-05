@@ -51,7 +51,6 @@ class basis_func:
             return self.params[0] * np.sin((self.params[1] * x - self.params[2]))
         elif self.func_class == 'lin':
             return self.params[0] * x
-
         elif self.func_class == 'hor':
             return np.full(np.shape(x), self.params[0])
         elif self.func_class == 'quad':
@@ -233,7 +232,7 @@ if __name__ == '__main__':
     main block instantiates the OMP object and performs all necessary tests
     '''
     args = [
-        ['sin', [0.05, 0.4, 1],  [100, 115, 1], [math.pi/2, 3*math.pi/2, math.pi/ 16]],
+        ['sin', [0.05, 0.4, 0.05],  [100, 115, 1], [math.pi/2, 3*math.pi/2, math.pi/ 16]],
         ['lin', [0.6, 1.4, 0.01]],
         ['quad', [0.1, 0.5, 0.05], [-2, -1, 0.05]],
         ['hor', [-0.2, 0, 0.01]]
