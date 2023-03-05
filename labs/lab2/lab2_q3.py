@@ -3,8 +3,6 @@ import numpy as np
 from time import time
 import math
 from matplotlib import pyplot as plt
-import scipy.linalg as lin
-
 '''
 construct a RBF model to minimize least-squares loss function, using a guassian kernel. Consider different values of theta and regularization parameters
 use cholesky factorization for the model.
@@ -59,8 +57,9 @@ class RBF:
         if self.test:
             self.x_train, self.y_train = np.vstack([self.x_train, self.x_valid]), np.vstack([self.y_train, self.y_valid])
             self.K = iso_gaussian(self.x_train, self.x_train, self.theta) # gram matrix from training data
-            self.C = lin.cho_factor(self.K + self.reg * np.identity(np.shape(self.x_train)[0])) # decomposition of (K + lambda * I)
-            self.alpha = lin.cho_solve(self.C, self.y_train) # solve system of equations for alpha given y
+            self.C = np.linalg.cholesky(self.K + self.reg * np.identity(np.shape(self.x_train)[0])) # decomposition of (K + lambda * I)
+            y = np.linalg.solve(self.C, self.y_train)
+            self.alpha = np.linalg.solve(np.matrix(self.C).H, y) # solve system of equations for alpha given y
             self.pred = iso_gaussian(self.x_test, self.x_train, self.theta).dot(self.alpha)
             # last line, we determine the gram matrix for the test input, and dot it with alpha to find the prediction
         else:

@@ -96,17 +96,7 @@ The model was to be implemented in Python using simple numpy libraries. For the 
 \boldsymbol\alpha = (\mathbf{K} + \lambda \mathbf{I})^{-1} \mathbf{y}
 \end{equation}
 
-The coefficient for regularization, $\lambda$, should always be positive to increase the cost of having terms of large magnitude in the weighting vector. Given then that $\lambda$ is positive, the matrix $\mathbf{K} + \lambda \mathbf{I}^{-1}$ is guaranteed to be positive semi-definite which in turn implies that the matrix is Hermitian. The inverse of a Hermitian matrix can be computed using the Cholesky factorization, which can be performed on a numpy ndarray using \verb+scipy.linalg.cho_factor+. The Cholesky factorization can express the matrix in terms of a lower triangular matrix and its conjugate transpose (denoted with the $^*$ operator), for which it is much simpler to compute the inverse of a matrix. Letting $\mathbf{L}$ be a lower diagonal matrix,
-
-\begin{equation}
-(\mathbf{K} + \lambda \mathbf{I}) = \mathbf{L} \mathbf{L}^*
-\end{equation}
-\begin{equation}
-(\mathbf{K} + \lambda \mathbf{I})^{-1} = (\mathbf{L}^{-1})^* \;\mathbf{L}^{-1}
-\end{equation}
-\begin{equation}
-\boldsymbol\alpha = (\mathbf{L}^{-1})^* \;\mathbf{L}^{-1} \mathbf{y}
-\end{equation}
+The coefficient for regularization, $\lambda$, should always be positive to increase the cost of having terms of large magnitude in the weighting vector. Given then that $\lambda$ is positive, the matrix $\mathbf{K} + \lambda \mathbf{I}^{-1}$ is guaranteed to be positive semi-definite which in turn implies that the matrix is Hermitian. The inverse of a Hermitian matrix can be computed using the Cholesky factorization, which can be performed on a numpy ndarray using \verb+numpy.linalg.cholesky+. The Cholesky factorization can express the matrix in terms of a lower triangular matrix and its conjugate transpose (denoted with the $^*$ operator), and bypasses the need to perform direct inversion. Using the decomposition, we can solve $\mathbf{Ax} = \mathbf{b}$ by first solving for $\mathbf{y}$ in $\mathbf{Ly} = \mathbf{b}$ and then solving for the $\mathbf{x}$ that satisfies $\mathbf{L^{*}x} = \mathbf{y}$.
 
 Thus, an expression for $\boldsymbol\alpha$ is obtained in terms of the desired output $\mathbf{y}$ and the inverse of the Cholesky decomposition of the matrix $\mathbf{K} + \lambda \mathbf{I})$, bypassing the need to perform a direct inversion, which could be more computationally expensive. Conveniently, the scipy library also has a method \verb+scipy.linalg.cho_solve+ which can solve a system of linear equations using the lower matrix determined from the Cholesky factorization. As such, a direct inverse is never computed, but nonetheless, it is nice to be assured that it will always exist for $\lambda \neq 0$
 
@@ -135,7 +125,7 @@ Using the RBF class and the \verb+run_validation+ class method, the RMSE loss ac
 \caption{the code used to evaluate RMSE loss across the grid of hyperparameters}
 \end{figure}
 
-\begin{table}
+\begin{table}[H]
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
