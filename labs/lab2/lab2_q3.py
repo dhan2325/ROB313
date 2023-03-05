@@ -64,8 +64,9 @@ class RBF:
             # last line, we determine the gram matrix for the test input, and dot it with alpha to find the prediction
         else:
             self.K = iso_gaussian(self.x_train, self.x_train, self.theta)
-            self.C = lin.cho_factor(self.K + self.reg * np.identity(np.shape(self.x_train)[0]))
-            self.alpha = lin.cho_solve(self.C, self.y_train)
+            self.C = np.linalg.cholesky(self.K + self.reg * np.identity(np.shape(self.x_train)[0])) # decomposition of (K + lambda * I)
+            y = np.linalg.solve(self.C, self.y_train)
+            self.alpha = np.linalg.solve(np.matrix(self.C).H, y) # solve system of equations for alpha given y
             self.pred = iso_gaussian(self.x_valid, self.x_train, self.theta).dot(self.alpha)
 
     def get_rmse(self):
