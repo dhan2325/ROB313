@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\setlength{\parskip}{12pt}
+
+\usepackage{geometry}
+\geometry{margin = 0.7in}
+
+\usepackage{float}
+\usepackage{graphicx}
+\graphicspath{{./images/}}
+
+\usepackage{mathtools, amssymb, amsmath}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{listings}
+\lstset{
+basicstyle=\small\ttfamily,
+columns=flexible,
+breaklines=true
+}
+
+
+\title{ROB313: Assignment 3}
+\author{Daniel Han: 1006842534}
+\date{March 2023}
+
+\begin{document}
+
+\maketitle
+
+\section{Gradient Descent Variations}
+
+\subsection{Setup/Mathematical Background}
+We were tasked with implementing different variations of gradient descent with different hyperparameters to measure the performance of different methods across the hyperparameter grids for each using the \verb+pumadyn32nm+ dataset. The dataset, with 32-element inputs and scalar outputs, was used to train a linear model regression model with minimization of least-squares loss. Predictions for a given input would be calculated as the inner product of the model's weight vector and the input vector. The loss function to be minimized, in vectorized form, can be written as shown below, where $\mathbf{X}$ is the matrix whose rows are the inputs in the training dataset.
+
+\begin{equation}
+f(\mathbf{X}, mathbf{w}) = \| \mathbf{y} - \mathbf{X}\mathbf{w} \| = \mathbf{y}^{T} \mathbf{y} - 2\mathbf{w}^{T} \mathbf{X}^{T} \mathbf{y} - \mathbf{•}bf{w}^{T} \mathbf{X}^{T} \mathbf{X}\mathbf{w}
+\end{equation}
+
+Previously, we solved for $\mathbf{w}$ analytically by setting the gradient of the loss function with respect to the weight vector and equating it to zero. This time, we will perform variations of gradient descent to find a numeric solution for the $\mathbf{w}$ vector. To do so, we will need to be able to calculate the gradient of the loss function with respect to the weight vector at any given iteration (i.e. for any given value of $\mathbf{w}$). While many other generic implementations of gradient descent optimization (such as numpy's built in optimization method) make use of a numeric approximation to the gradient, we are able to find the exact expression for the gradient at any iteration since we will always be finding the gradient for the same loss function. The gradient of the loss function is denoted $g(\mathbf{w})$.
+
+\begin{equation}
+\mathbf{g}(\mathbf{w}, \mathbf{X}) = -\mathbf{X}^T\mathbf{y} - \mathbf{X}^{T}\mathbf{X}\mathbf{y}
+\end{equation}
+
+For gradient descent, each iteration will update the weight vector using $\mathbf{w}_{k+1} = \mathbf{w}_{k} - \alpha \cdot \mathbf{g}(\mathbf{w}_{k}, \mathbf{X})$, where $\alpha$ is a non-negative learning rate. For the sake of this exercise, rather than imposing a well-defined stopping criterion for our gradient descent, each variation will be run for some number of iterations/epochs so that their relative performances over iterations/folds can be compared.
+
+\subsection{Python Implementation}
+
+\subsection{Results}
+
+\end{document}
