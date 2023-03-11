@@ -50,6 +50,7 @@ Previously, we solved for $\mathbf{w}$ analytically by setting the gradient of t
 For gradient descent, each iteration will update the weight vector using $\mathbf{w}_{k+1} = \mathbf{w}_{k} - \alpha \cdot \mathbf{g}(\mathbf{w}_{k}, \mathbf{X})$, where $\alpha$ is a non-negative learning rate. For the sake of this exercise, rather than imposing a well-defined stopping criterion for our gradient descent, each variation will be run for some number of iterations/epochs so that their relative performances over iterations/folds can be compared.
 
 \subsection{Python Implementation}
+Iterations of gradient descent and all auxiliary calculations were done in a single python object called \verb+graddesc+, which could iteratively update the weight vector of the model. A \verb+reset+ method was also added, which would reset the weight vector to allow multiple variations of gradient descent (using different hyperparameters) could be run without having to reinstantiate the class and re-import the entire dataset.
 
 \subsection{Results}
 

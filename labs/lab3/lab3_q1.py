@@ -21,10 +21,12 @@ class graddesc:
 
     
     def df_dw(self):
+        # determine gradient for current value of w
         grad = - np.matmul(self.x_train.T, self.y_train) - (self.x_train.T.dot(self.x_train.dot(self.w)))
         return grad
 
     def run_gd(self):
+        # run the appropriate variation of grad desc
         if self.beta != 0:
             self.run_momentum()
         elif self.batch != 0:
@@ -33,17 +35,21 @@ class graddesc:
             self.run_full()
     
     def run_momentum(self):
+        # run gradient descent with momentum, using the Beta and batch size specified upon declaration
         pass
 
     def run_stoch(self):
+        # run sotchastic gradient descent, using the batch size specified upon declaration
         pass
 
     def run_full(self):
+        # run a full gradient descent using all 1000 training points
         for _ in range(self.iter):
             self.w = self.w  - self.lr * self.df_dw()
 
 
     def reset(self, l_rate = 0, beta = 0, batch = 0):
+        # reset weight vector to zero, specify how to reset fields
         self.w = np.zeros(np.shape(self.x_train[0]))
         self.lr = l_rate
         self.beta = beta
