@@ -4,11 +4,18 @@ from time import time
 import math
 from matplotlib import pyplot as plt
 
+# TODO: test for different values of learning rate, beta
+# TODO: graph results
 
 np.random.seed = 1006842534
 
 class graddesc:
-    def __init__(self, dataset, iter = 100, l_rate = 0, beta = 0, batch = 0):
+    '''
+    class stores dataset to avoid multiple imports, and also stores hyperarameters
+    related to the search algorithm. The class can be specified to perform any of the
+    three variations of gradient descent with any desired hyperparamters
+    '''
+    def __init__(self, dataset, iter = 100, l_rate = 0, beta = 0, batch = 0, track_err = False):
         self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset)
         np.random.shuffle(self.x_train), np.random.shuffle(self.y_train)
         self.x_train, self.y_train = self.x_train[:1000], self.y_train[:1000]
@@ -18,6 +25,11 @@ class graddesc:
         self.beta = beta
         self.batch = batch
         self.w = np.zeros((np.shape(self.x_train[0])[0], 1))
+        self.track = track_err
+        self.losses = [0] * self.iter
+        # if track_err, then we will measure at each step
+        # the least squares loss so that we can plot it later
+        # note: for the plot, we should also plot the absolute minimum for the ls loss due to 
 
     
     def df_dw(self):
@@ -44,8 +56,10 @@ class graddesc:
 
     def run_full(self):
         # run a full gradient descent using all 1000 training points
-        for _ in range(self.iter):
+        for i in range(self.iter):
             self.w = self.w  - self.lr * self.df_dw()
+            if self.track:
+                self.losses[i] = 0 # TODO
 
 
     def reset(self, l_rate = 0, beta = 0, batch = 0):
