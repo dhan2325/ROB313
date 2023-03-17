@@ -20,14 +20,11 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
     return shuf_x, shuf_y
 
 class graddesc:
-    '''
-    stopping condition for gradient descent? Currently implementing a 'relative error' decrease
-
-    '''
+    # gradient descent class, able to perform multiple variations on same dataset
     def __init__(self, dataset, iter = 100, l_rate = 0, beta = 0, batch = 0):
         self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset)
-        self.x_train, self.y_train = self.x_train[1000:2000], self.y_train[1000:2000]
-        # self.x_train, self.y_train = randomize(self.x_train, self.y_train)
+        self.x_train, self.y_train = randomize(self.x_train, self.y_train)
+        self.x_train, self.y_train = self.x_train[:1000], self.y_train[:1000]
         self.x_train = np.hstack([np.ones((np.shape(self.x_train)[0], 1)), self.x_train])
         # print(self.x_train[69])
         self.iter = iter
@@ -35,10 +32,15 @@ class graddesc:
         self.beta = beta
         self.batch = batch
         self.w = np.zeros((np.shape(self.x_train[0])[0], 1))
-        print(np.shape(self.w))
+        # print(np.shape(self.w))
+
+        self.ls_loss, self.truew = self.get_ls_loss()
 
         self.losses : list[int] = []
 
+    def get_loss(self):
+        # get squared loss using current weight vector
+        return np.sum(np.square(self.y_train - self.x_train.dot(self.w)))
     
     def df_dw(self):
         # determine gradient for current value of w
@@ -89,6 +91,7 @@ class graddesc:
             diff = (self.lr * self.df_dw())
             self.w = self.w - diff
             #print(self.w[:3], '\n')
+            self.losses.append(self.get_loss())
         return self.w
 
 
@@ -98,19 +101,29 @@ class graddesc:
         self.lr = l_rate
         self.beta = beta
         self.batch = batch
+    
+    def get_ls_loss(self):
+        truew, resid, rank, s = np.linalg.lstsq(self.x_train.T.dot(self.x_train), self.x_train.T.dot(self.y_train))
+        y_preds = np.matmul(self.x_train, truew)
+        ls_loss = np.sum(np.square(self.y_train - y_preds))
+        return ls_loss, truew
+
 
 
 if __name__ == '__main__':
     # breaking point: l_rate = 0.0008
-    optim = graddesc('pumadyn32nm', iter = 3, l_rate = 0.0001, batch = 1)
+    it = 20
+    optim = graddesc('pumadyn32nm', iter = it, l_rate = 0.0001)
     weight = optim.run_gd()
     
     truew, resid, rank, s = np.linalg.lstsq(optim.x_train.T.dot(optim.x_train), optim.x_train.T.dot(optim.y_train))
     y_preds = np.matmul(optim.x_train, truew)
-    print(truew  - optim.w)
+    ls_loss = np.sum(np.square(optim.y_train - y_preds))
 
-    # plt.plot(list(range(10)), (optim.w - truew)[:10], marker = 'o',markersize = 1, color = (0,0,1), linestyle = None, linewidth = 0)
-    plt.plot(range(optim.y_train.size), y_preds - optim.y_train, marker = 'o', markersize = 1, color = (1,0,0), linestyle = None, linewidth = 0)
+    print(truew  - optim.w)
+    print(optim.losses)
+    plt.plot(range(it), [ls_loss] * it)
+    plt.plot(range(it), optim.losses, marker = 'o', markersize = 1, color = (1,0,0), linestyle = None, linewidth = 0)
     plt.show()
 
     
