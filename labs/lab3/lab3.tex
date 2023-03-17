@@ -49,9 +49,16 @@ Previously, we solved for $\mathbf{w}$ analytically by setting the gradient of t
 
 For gradient descent, each iteration will update the weight vector using $\mathbf{w}_{k+1} = \mathbf{w}_{k} - \alpha \cdot \mathbf{g}(\mathbf{w}_{k}, \mathbf{X})$, where $\alpha$ is a non-negative learning rate. For the sake of this exercise, rather than imposing a well-defined stopping criterion for our gradient descent, each variation will be run for some number of iterations/epochs so that their relative performances over iterations/folds can be compared.
 
+For the stochastic gradient descent variations, the same update step was applied, except rather than using the full input matrix $\mathbf{X}$ to compute the derivative, a subset of the rows in the input matrix form a matrix denoted $\mathbf{X'}$, whose row count is equal to the batch size specified. To add momentum to the gradient descent, the gradient of the loss function was computed using batches as before, but the vector used to update the weights was computed as the weighted average of the previous iteration's vector and the gradient of the loss function in the current iteration.
+
 \subsection{Python Implementation}
-Iterations of gradient descent and all auxiliary calculations were done in a single python object called \verb+graddesc+, which could iteratively update the weight vector of the model. A \verb+reset+ method was also added, which would reset the weight vector to allow multiple variations of gradient descent (using different hyperparameters) could be run without having to reinstantiate the class and re-import the entire dataset.
+Iterations of gradient descent and all auxiliary calculations were done in a single python object called \verb+graddesc+, which could iteratively update the weight vector of the model. A \verb+reset+ method was also added, which would reset the weight vector to allow multiple variations of gradient descent (using different hyperparameters) could be run without having to reinstantiate the class and re-import the entire dataset. The class also kept track of the squared loss at every single iteration to compare against the analytic solution to the least-squares loss problem. the analytic solution was computed using \verb+np.linalg.lstsq+ to find the pseudoinverse of the input matrix and find the vector $\mathbf{w}$ that would yield the least squared loss. A percent error threshold could also be defined for the gradient descent, indicating the allowable loss at which the gradient descent iterations would stop. However, in the code, for the sake of testing, the algorithm continues for a specified number of iterations even if the stopping criterion is met.
+
+The assignment asked for plots over both time passed and epochs run.
 
 \subsection{Results}
+% implement momentum, find best learning rate for each of the four implementations using iterative checking.
+% once I've done that, augment code to plot not over iterations but over epochs and over runtime
+% get plots and drop them in here
 
 \end{document}

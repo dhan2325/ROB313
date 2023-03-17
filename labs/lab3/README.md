@@ -1,0 +1,5 @@
+#Python Setup Instructions
+While it is not included in the zip submission as per the instructions, the folder provided for the data utility functions should be included in the directory from which the python files will be run (files import the load_dataset function). As for external libraries, the two python files make use of numpy for linear algebra computations and vectorization purposes, matplotlib to generate graphs, and some standard python libraries to perform miscellaneous tasks, so scripts should be run in an environment where all the aforementioned libraries are available.
+
+#Documentation of scripts
+The comments left in ''' quotations should be read by the user to understand the functionality of each function. While most of question 3 is self-explanatory (each line of code corresponds to a mathematical calculation) question 4 has more extensive documentation as it was deemed necessary.
