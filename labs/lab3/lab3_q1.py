@@ -70,6 +70,7 @@ class graddesc:
         elif self.batch != 0:
             return self.run_stoch()
         else:
+            print('performing full Gradient Descent')
             return self.run_full()
     
     def run_momentum(self):
@@ -111,6 +112,7 @@ class graddesc:
 
     def run_full(self):
         # run a full gradient descent using all 1000 training points
+        
         done = False
         for i in range(self.iter):
             #print(self.w[:3])
@@ -119,11 +121,11 @@ class graddesc:
             #print(self.w[:3], '\n')
             newloss = self.get_loss()
             self.losses.append(newloss)
-            if (not done) and ((newloss  - self.ls_loss)/self.ls_loss < 0.001):
+            if (not done) and ((newloss  - self.ls_loss)/self.ls_loss < self.thresh/100):
                 done = True
-                print('0.1% of loss at {} iterations'.format(i))
+                print('{}% of loss at {} iterations with learning rate {}'.format(self.thresh, i, self.lr))
         if not done:
-            print('did not reach 0.1% of loss after {} iterations'.format(self.iter))
+            print('did not reach {}% of loss after {} iterations with learning rate {}'.format(self.thresh, self.iter, self.lr))
         return self.w
 
 
@@ -133,6 +135,9 @@ class graddesc:
         self.lr = l_rate
         self.beta = beta
         self.batch = batch
+        self.losses : list[float] = []
+        self.losses_epoch : list[float] = []
+        self.losses_time : list[float] = []
     
     def get_ls_loss(self):
         truew, resid, rank, s = np.linalg.lstsq(self.x_train.T.dot(self.x_train), self.x_train.T.dot(self.y_train), rcond = None)
@@ -144,18 +149,28 @@ class graddesc:
 
 if __name__ == '__main__':
     # breaking point: l_rate = 0.0008
-    it = 2000
-    optim = graddesc('pumadyn32nm', iter = it, l_rate = 0.0001, batch = 1, beta = 0.9, thresh = 1)
-    weight = optim.run_gd()
+    it = 100
+    optim = graddesc('pumadyn32nm', iter = it, l_rate = 0.0001, batch = 1, beta = 0, thresh = 0.01)
+    # weight = optim.run_gd()
     
-    truew, resid, rank, s = np.linalg.lstsq(optim.x_train.T.dot(optim.x_train), optim.x_train.T.dot(optim.y_train), rcond = None)
-    y_preds = np.matmul(optim.x_train, truew)
-    ls_loss = np.sum(np.square(optim.y_train - y_preds))
-
-    print(np.linalg.norm(truew  - optim.w))
-    # print(optim.losses)
-    plt.plot(range(it), [ls_loss] * it)
+    """ plt.plot(range(it), [optim.ls_loss] * it, markersize = 1, color = (0,0,1))
     plt.plot(range(it), optim.losses, markersize = 1, color = (1,0,0))
-    plt.show()
+    print(optim.losses)
+    plt.show() """
+
+    a_range = (0.00005, 0.0001, 0.00025, 0.0005, 0.001)
+
+    for a in a_range:
+        optim.reset(l_rate = a, beta = 1)
+        # print(optim.w)
+        optim.run_gd()
+        # print(optim.losses)
+        # print(optim.losses)
+        plt.clf()
+        plt.title('Gradient Descent: learning rate = {}'.format(a))
+        plt.plot(range(it), [optim.ls_loss] * it, markersize = 1, color = (0,0,1))
+        plt.plot(range(it), optim.losses, markersize = 1, color = (1,0,0))
+        plt.show()
+
 
     

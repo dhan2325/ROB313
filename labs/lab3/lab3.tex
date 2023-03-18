@@ -60,5 +60,10 @@ The assignment asked for plots over both time passed and epochs run.
 % find optimal hyperparameters for fast/stable convergence. Since everything runs prety quickly, get a relatively big/fine grid of hyperparamters, check plot for each, compare performance.
 % once I've done that, augment code to plot not over iterations but over epochs and over runtime
 % get plots and drop them in here
+Before comparing the relative performances of each variation of gradient descent, the optimal hyperparamters that minimized convergence time without sacrificing too much stability were selected for each of the variations. For standard gradient descent, and stochastic gradient descent (given a fixed batch size), the only hyperparamter to test for was the learning rate. For SGD with momentum, however, tests were performed across a grid of hyperparamters with varying learning rates and momentum weight values $\beta$.
+
+For standard gradient descent, the set of learning rate values were defined as $\alpha \in \{0.00005, 0.0001, 0.00025, 0.0005, 0.001\}$. Values of $\alpha$ greater than or equal to 0.00005 did not converge at all and had increasing error with more iterations. $\alpha = 0.0005$ converged to within 0.01\% of the analytic least-squares loss fastest, taking just two iterations. However, the larger $\alpha$ value would have made the model too sensitive to changes in the data set to be widely applicable, so the more conservative value of $\alpha = 0.00025$ was selected, which converged to within 0.01\% in just 7 iterations.
+
+
 
 \end{document}
