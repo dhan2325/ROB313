@@ -64,6 +64,53 @@ Before comparing the relative performances of each variation of gradient descent
 
 For standard gradient descent, the set of learning rate values were defined as $\alpha \in \{0.00005, 0.0001, 0.00025, 0.0005, 0.001\}$. Values of $\alpha$ greater than or equal to 0.00005 did not converge at all and had increasing error with more iterations. $\alpha = 0.0005$ converged to within 0.01\% of the analytic least-squares loss fastest, taking just two iterations. However, the larger $\alpha$ value would have made the model too sensitive to changes in the data set to be widely applicable, so the more conservative value of $\alpha = 0.00025$ was selected, which converged to within 0.01\% in just 7 iterations.
 
+For Stochastic Gradient Descent, batch sizes of 1 and 10 were tried. To compare performance over epochs, since 100 iterations were run for full gradient descent, 100 epochs were run for each batch size to compare performance. Additionally, in order to weight every point in the dataset evenly, it was assumed that stochastic gradient descent would always be performed for a integer number of epochs (i.e. the program would not terminate mid-epoch). Trying the same range of values for the learning rate, a learning rate of 0.0001 yielded the fastest convergence while still being able to converge very closely to the analytically computed minimum loss. Then, adding momentum to SGD for a batch size of 1 using the learning rate from before, it was found that across a wide range of beta values that the convergence and steady-state error did not change significantly across different values of beta. However, while SGD yielded an error within 0.01\% of the minimum error for a linear model, with the addition of momentum, the SGD model was not able to reach 0.01\% error within 100 epochs, meaning it had a greater steady-state error.
 
+In terms of computation time, all four methods with their optimal learning rates were able to converge in under ten epochs. However, when calculating the time it took per epoch over 100 epochs (not including the time it took to calculate the loss at each iteration), standard Gradient Descent was fastest, with all computations taking 0.02s. SGD with batch sizes of 1 and 10 took 1.21 and 0.14 seconds respectively to perform the same number of iterations. With momentum and a batch size of 1, the total computation time increased to 0.19 seconds for 100 epochs. Thus for this dataset, standard Gradient Descent converged as fast as other methods in terms of epochs required and faster than other methods in terms of computation time. It should be noted, however, that in general, for all variations, less computation was required for calculating the gradient at each step since an analytical expression for the derivative of the loss function was available, which may not always be the case in general for gradient descent.
+
+In summary, while higher learning rates do yield faster convergence, they also tend to yield greater final errors from the analytical solution. Thus for each application, it is up to the user to determine an appropriate learning rate for the task at hand depending on how they value the runtime/accuracy tradeoff.
+
+\section{Figures}
+Plots of the loss of each variation of gradient descent (with different hyperparamaters) across epochs are provided below.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{./images/GD_5e-05}
+\includegraphics[scale=0.5]{./images/GD_0.0001}
+\includegraphics[scale=0.5]{./images/GD_0.00025}
+\includegraphics[scale=0.5]{./images/GD_0.0005}
+\includegraphics[scale=0.5]{./images/GD_0.001}
+\caption{Loss across iterations for various Learning Rates for Gradient Descent}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{./images/SGD_batch1_5e-05}
+\includegraphics[scale=0.5]{./images/SGD_batch1_0.0001}
+\includegraphics[scale=0.5]{./images/SGD_batch1_0.00025}
+\includegraphics[scale=0.5]{./images/SGD_batch1_0.0005}
+\includegraphics[scale=0.5]{./images/SGD_batch1_0.001}
+\caption{Loss across epochs for various Learning Rates for Stochastic Gradient Descent with batch size 1}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{./images/SGD_batch10_5e-05}
+\includegraphics[scale=0.5]{./images/SGD_batch10_0.0001}
+\includegraphics[scale=0.5]{./images/SGD_batch10_0.00025}
+\includegraphics[scale=0.5]{./images/SGD_batch10_0.0005}
+\includegraphics[scale=0.5]{./images/SGD_batch10_0.001}
+\caption{Loss across epochs for various Learning Rates for Stochastic Gradient Descent with batch size 10}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{./images/SGD_mom_0.3}
+\includegraphics[scale=0.5]{./images/SGD_mom_0.5}
+\includegraphics[scale=0.5]{./images/SGD_mom_0.75}
+\includegraphics[scale=0.5]{./images/SGD_mom_0.9}
+\includegraphics[scale=0.5]{./images/SGD_mom_0.95}
+\caption{Loss across epochs for Stochastic Gradient Descent with batch size 1 and varying beta}
+\end{figure}
 
 \end{document}
