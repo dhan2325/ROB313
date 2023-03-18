@@ -3,14 +3,14 @@ import numpy as np
 from time import time
 import math
 from matplotlib import pyplot as plt
-
-# TODO: test for different values of learning rate, beta
-# TODO: graph results
-
-np.random.seed(1006842534)
+'''
+same graddesc class as before, we just have to change the df_dw methods
+since we are minimizing a different function
+'''
+def sig(z):
+    return 1/(1+np.exp(-z))
 
 def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
-
     joined = np.hstack([array_x, array_y])
     # print(np.shape(joined))
     
@@ -21,11 +21,12 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
 
 class graddesc:
     # gradient descent class, able to perform multiple variations on same dataset
+    # weight vector still have one more element than a single x input
     def __init__(self, dataset, iter = 100, l_rate = 0, beta = 0, batch = 0, thresh = 0.1):
         self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset)
         self.x_train, self.y_train = randomize(self.x_train, self.y_train)
-        self.x_train, self.y_train = self.x_train[:1000], self.y_train[:1000]
         self.x_train = np.hstack([np.ones((np.shape(self.x_train)[0], 1)), self.x_train])
+        self.y_train = self.y_train[:,1]
         # print(self.x_train[69])
         self.iter = iter
         self.lr = l_rate
@@ -44,14 +45,16 @@ class graddesc:
     def get_loss(self):
         # get squared loss using current weight vector
         return np.sum(np.square(self.y_train - self.x_train.dot(self.w)))
-    
+    def f_hat(self, x):
+        return sig(self.w.T.dot(x))
+
     def df_dw(self):
         # determine gradient for current value of w
         # print(np.shape(self.x_train.T.dot(self.x_train.dot(self.w))))
-        x = self.x_train
-        y = self.y_train
-        w = self.w
-        grad = 2 * x.T.dot(x.dot(w) - y)
+        grad = np.zeros((np.shape(self.x_train)[0], 1))
+        for i in range(np.shape(self.x_train)[0]):
+            addgrad = (self.y_train[i] - self.f_hat(self.x_train[i])) * self.x_train[i]
+            grad += addgrad
         return grad
     
     def df_dw_batch(self, batch_ind):
@@ -165,57 +168,8 @@ class graddesc:
         y_preds = np.matmul(self.x_train, truew)
         ls_loss = np.sum(np.square(self.y_train - y_preds))
         return ls_loss, truew
-
-
-
+    
 if __name__ == '__main__':
     # breaking point: l_rate = 0.0008
-    it = 10000 # 100 * 1000/batch_size
-    optim = graddesc('pumadyn32nm', iter = it, l_rate = 0.0001, batch = 10, beta = 0.9, thresh = 0.01)
-    weight = optim.run_gd()
-    print('SGD_1: {}'.format(optim.comp_time))
-    
-    
-    """ plt.plot(range(it), [optim.ls_loss] * it, markersize = 1, color = (0,0,1))
-    plt.plot(range(it), optim.losses, markersize = 1, color = (1,0,0))
-    print(optim.losses)
-    plt.show() """
-
-    # a_range = (0.00005, 0.0001, 0.00025, 0.0005, 0.001)
-    """ a_range = (0.00005, 0.0001, 0.00025, 0.0005, 0.001)
-    for a in a_range:
-        optim.reset(l_rate = a, batch = 1)
-        # print(optim.w)
-        optim.run_gd()
-        # print(optim.losses)
-        # print(optim.losses)
-        plt.clf()
-        print(len(optim.losses_epoch))
-        plt.title('Stochastic Gradient Descent: batch size of 10, learning rate = {}'.format(a))
-        plt.xlabel('Epochs passed')
-        plt.ylabel('Squared Error')
-        plt.plot(range(len(optim.losses_epoch)), [optim.ls_loss] * len(optim.losses_epoch), markersize = 1, color = (0,0,1), label = 'Minimum loss')
-        plt.plot(range(len(optim.losses_epoch)), optim.losses_epoch, markersize = 1, color = (1,0,0), label = 'Gradient Descent Loss')
-        plt.legend()
-        # plt.savefig('./labs/lab3/images/SGD_batch10_{}.png'.format(a))
-        plt.show() """
-    """ b_range = (0.3, 0.5, 0.75, 0.8, 0.85, 0.9, 0.95)
-    for b in b_range:
-        optim.reset(l_rate = 0.00025, batch = 1, beta=b)
-        # print(optim.w)
-        optim.run_gd()
-        # print(optim.losses)
-        # print(optim.losses)
-        plt.clf()
-        print(len(optim.losses_epoch))
-        plt.title('SGD with Momentum: batch size of 1, learning rate = 0.001, beta = {}'.format(b))
-        plt.xlabel('Epochs passed')
-        plt.ylabel('Squared Error')
-        plt.plot(range(len(optim.losses_epoch)), [optim.ls_loss] * len(optim.losses_epoch), markersize = 1, color = (0,0,1), label = 'Minimum loss')
-        plt.plot(range(len(optim.losses_epoch)), optim.losses_epoch, markersize = 1, color = (1,0,0), label = 'Gradient Descent Loss')
-        plt.legend()
-        plt.savefig('./labs/lab3/images/SGD_mom_{}.png'.format(b))
-        plt.show() """
-
-
-    
+    it = 100 # 100 * 1000/batch_size
+    optim = graddesc('iris', iter = it, l_rate = 0.0001, batch = 10, beta = 0.9, thresh = 0.01)
