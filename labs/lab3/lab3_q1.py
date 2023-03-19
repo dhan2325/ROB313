@@ -10,7 +10,10 @@ from matplotlib import pyplot as plt
 np.random.seed(1006842534)
 
 def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
-
+    '''
+    function to randomly reorder the dataset provided
+    different seeds will change which 1000 points we select from the dataset
+    '''
     joined = np.hstack([array_x, array_y])
     # print(np.shape(joined))
     
@@ -20,6 +23,13 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
     return shuf_x, shuf_y
 
 class graddesc:
+    '''
+    class to perform gradient descent. learning rate, beta, batch size and stopping threshold can all be defined and/or
+    reset using class methods. Methods also include getting least squares loss with analytic solution and gradient descent solution
+    class can run all three variations of gradient descent specified in the assignment handout
+    helper functions defined for gradient descent only called within class include finding the gradient for the full batch or
+    for mini-batch
+    '''
     # gradient descent class, able to perform multiple variations on same dataset
     def __init__(self, dataset, iter = 100, l_rate = 0, beta = 0, batch = 0, thresh = 0.1):
         self.x_train, self.x_valid, self.x_test, self.y_train, self.y_valid, self.y_test = load_dataset(dataset)
@@ -175,14 +185,9 @@ if __name__ == '__main__':
     weight = optim.run_gd()
     print('SGD_1: {}'.format(optim.comp_time))
     
-    
-    """ plt.plot(range(it), [optim.ls_loss] * it, markersize = 1, color = (0,0,1))
-    plt.plot(range(it), optim.losses, markersize = 1, color = (1,0,0))
-    print(optim.losses)
-    plt.show() """
 
-    # a_range = (0.00005, 0.0001, 0.00025, 0.0005, 0.001)
-    """ a_range = (0.00005, 0.0001, 0.00025, 0.0005, 0.001)
+    # used to plot all gradient descents on separate figures
+    a_range = (0.00005, 0.0001, 0.00025, 0.0005, 0.001)
     for a in a_range:
         optim.reset(l_rate = a, batch = 1)
         # print(optim.w)
@@ -198,8 +203,8 @@ if __name__ == '__main__':
         plt.plot(range(len(optim.losses_epoch)), optim.losses_epoch, markersize = 1, color = (1,0,0), label = 'Gradient Descent Loss')
         plt.legend()
         # plt.savefig('./labs/lab3/images/SGD_batch10_{}.png'.format(a))
-        plt.show() """
-    """ b_range = (0.3, 0.5, 0.75, 0.8, 0.85, 0.9, 0.95)
+        plt.show()
+    b_range = (0.3, 0.5, 0.75, 0.8, 0.85, 0.9, 0.95)
     for b in b_range:
         optim.reset(l_rate = 0.00025, batch = 1, beta=b)
         # print(optim.w)
@@ -215,7 +220,7 @@ if __name__ == '__main__':
         plt.plot(range(len(optim.losses_epoch)), optim.losses_epoch, markersize = 1, color = (1,0,0), label = 'Gradient Descent Loss')
         plt.legend()
         plt.savefig('./labs/lab3/images/SGD_mom_{}.png'.format(b))
-        plt.show() """
+        plt.show()
 
 
     

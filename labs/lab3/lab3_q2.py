@@ -4,10 +4,7 @@ from time import time
 import math
 from matplotlib import pyplot as plt
 from scipy.special import expit as sigmoid
-'''
-same graddesc class as before, we just have to change the df_dw methods
-since we are minimizing a different function
-'''
+
 def sig(z):
     # print(1/(1+np.exp(-z)))
     return 1/(1+np.exp(-z))
@@ -22,6 +19,10 @@ def randomize(array_x : np.ndarray, array_y: np.ndarray, split_axis : int = 1):
     return shuf_x, shuf_y
 
 class graddesc:
+    '''
+    same graddesc class as before, we just have to change the df_dw methods
+    since we are minimizing a different function
+    '''
     # gradient descent class, able to perform multiple variations on same dataset
     # weight vector still have one more element than a single x input
     def __init__(self, dataset, iter = 100, l_rate = 0, beta = 0, batch = 0, thresh = 0.1):
@@ -153,6 +154,9 @@ class graddesc:
     
     
 if __name__ == '__main__':
+    '''
+    plot all GD, SGD on a single plot across epochs
+    '''
     # breaking point: l_rate = 0.0008
     it = 25 # 100 * 1000/batch_size
     optim = graddesc('iris', iter = it, l_rate = 0.0001)
