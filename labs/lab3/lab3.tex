@@ -54,7 +54,6 @@ For the stochastic gradient descent variations, the same update step was applied
 \subsection{Python Implementation}
 Iterations of gradient descent and all auxiliary calculations were done in a single python object called \verb+graddesc+, which could iteratively update the weight vector of the model. A \verb+reset+ method was also added, which would reset the weight vector to allow multiple variations of gradient descent (using different hyperparameters) could be run without having to reinstantiate the class and re-import the entire dataset. The class also kept track of the squared loss at every single iteration to compare against the analytic solution to the least-squares loss problem. the analytic solution was computed using \verb+np.linalg.lstsq+ to find the pseudoinverse of the input matrix and find the vector $\mathbf{w}$ that would yield the least squared loss. A percent error threshold could also be defined for the gradient descent, indicating the allowable loss at which the gradient descent iterations would stop. However, in the code, for the sake of testing, the algorithm continues for a specified number of iterations even if the stopping criterion is met.
 
-The assignment asked for plots over both time passed and epochs run.
 
 \subsection{Results}
 % find optimal hyperparameters for fast/stable convergence. Since everything runs prety quickly, get a relatively big/fine grid of hyperparamters, check plot for each, compare performance.
@@ -112,5 +111,53 @@ Plots of the loss of each variation of gradient descent (with different hyperpar
 \includegraphics[scale=0.5]{./images/SGD_mom_0.95}
 \caption{Loss across epochs for Stochastic Gradient Descent with batch size 1 and varying beta}
 \end{figure}
+
+
+\section{Logistic Regression on iris classification}
+
+\subsection{Setup/Mathematical Background}
+In this section, the task was to perform Gradient Descent to determine of a logistic regression model for teh iris dataset. The classification problem was solved using a Bernoulli likelihood function using a logistic sigmoid. Gradient descent was applied to determine the weight vector that maximized the log-Bernoulli-likelihood, which in turn would also be the weight vector that maximized the Bernoulli-likelihood since the logarithm is a monotonically increasing function.
+
+\subsection{Python Implementation}
+Since this task also called for gradient descent, the same \verb+graddesc+ class was used, except this time with a differently defined function for determining the loss and gradient. In addition, when importing the dataset, since the task was only concerned with binary classification of iris virginica, only the final column of the y data was used for all puposes.
+
+Once gradient descent had completed, the weight vector across all iterations that had the lowest negative log-probability was used to predict on the training set. This task was performed over a range of learning rates, and the negative log-likelihood across each epoch was plotted for both methods.
+
+\subsection{Results}
+For all methods and hyperparameters tried, all Gradient Descent variations yield a weight vector that is able to predict with $73\%$ accuracy. It should be noted, however, that the testing dataset has only 15 samples. To get a more conclusive result on which gradient descent method would work better, it would be better to obtain more data to test on, to examine more carefully the performance of each method.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{./images/q2_full}
+\includegraphics[scale=0.5]{./images/q2_SGD}
+\caption{Negative Log Likelihood over epochs performed}
+\end{figure}
+
+\subsection{Performance Metric Choice/Test log-likelihood}
+The test log-likelihood could potentially be a better performance metric than the test accuracy since it measures how likely it is for all samples in the test dataset to have occurred given the computed weight vector. Especially since our dataset is small, all methods of gradient descent are able to correctly identify the same number of samples from the test set, but they yield different values for the log-likelihood of the test set.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+$\alpha$ =& 0.00005 & 0.0001 & 0.0005 & 0.001\\ \hline
+$\log(P)$ = &8.98&8.21&6.99&6.88 \\ \hline
+\hline
+\end{tabular}
+\caption{Negative log-likelihood of predictions from using GD with various learning rates}
+\end{center}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+$\alpha$ =& 0.00005 & 0.0001 & 0.0005 & 0.001\\ \hline
+$\log(P)$ = &8.99&8.23&7.33&7.01 \\ \hline
+\hline
+\end{tabular}
+\caption{Negative log-likelihood of predictions from using SGD with various learning rates}
+\end{center}
+\end{table}
 
 \end{document}
