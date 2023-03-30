@@ -9,8 +9,10 @@ import matplotlib.pyplot as plt
 
 # path to data
 sys.path.append(os.path.join(os.getcwd(), "../../../data"))
-from data_utils import load_dataset
+from data.data_utils import load_dataset
 
+
+# from typing import list, Tuple
 
 def init_randn(m, n, rs=npr.RandomState(0)):
     """ init mxn matrix using small random normal
@@ -21,7 +23,8 @@ def init_randn(m, n, rs=npr.RandomState(0)):
 def init_xavier(m, n, rs=npr.RandomState(0)):
     """ TODO: init mxn matrix using Xavier intialization
     """
-    pass
+
+    return rs.randn(m, n) / np.sqrt(m)
 
 
 def init_net_params(layer_sizes, init_fcn, rs=npr.RandomState(0)):
@@ -42,15 +45,43 @@ def neural_net_predict(params, inputs):
        inputs is an (N x D) matrix.
        returns normalized class log-probabilities."""
     for W, b in params:
-        outputs = np.dot(inputs, W) + b
+        outputs = np.dot(inputs, W) + b # general formula for transformation of a layer in neural net
         inputs = relu(outputs)
+    '''
+    log sum exp is exactly what it sounds like: the log of the sum of the exponents of
+    all the terms in a vector/matrix row/matrix col
+    
+    '''
     return outputs - logsumexp(outputs, axis=1, keepdims=True)
 
 
 def mean_log_like(params, inputs, targets):
-    """ TODO: return the log-likelihood / the number of inputs 
+    """ TODO: return the log-likelihood / the number of inputs
+    our optimization is done in batches, so we should be computing
+    log-likelihood for eneitre batch, then dividing by number of input points
     """
-    raise NotImplementedError("mean_log_like function not completed (see Q3).")
+    # raise NotImplementedError("mean_log_like function not completed (see Q3).")
+    # print('computing mean-log-like')
+    for W, b in params:
+        outputs = np.dot(inputs, W) + b
+        inputs = relu(outputs)
+    outputs = relu(outputs)
+    log_p = 0
+    # print(outputs)
+    # each output is an array of ten bools
+    # for each output, compute log-likelihod sum
+    # add all terms up, then divide by number of inputs
+
+    # TODO: confirm that this function is at all remotely correct, then tune parameters
+    for i, f_hat in enumerate(outputs):
+        for j, val in enumerate(f_hat):
+            if targets[i][j]:
+                if (val != 0):
+                    log_p += np.log(val)
+    
+    return log_p
+
+
 
 
 def accuracy(params, inputs, targets):
@@ -91,6 +122,7 @@ if __name__ == "__main__":
     def objective(params, iter):
         # get indices of data in batch
         idx = batch_indices(iter)
+        # print(x_train[idx][0])
         return -mean_log_like(params, x_train[idx], y_train[idx])
 
     # Get gradient of objective using autograd.
