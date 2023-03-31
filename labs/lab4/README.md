@@ -1,0 +1,1 @@
+the only python script to run is the modified starter code file. The data directory should be included as a subdirectory to the pwd. In addition to the modules used in the provided started code, some sklearn.metrics methods are also used for plotting a confusion matrix.
