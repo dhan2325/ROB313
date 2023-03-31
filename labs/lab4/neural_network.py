@@ -7,6 +7,8 @@ import os
 import sys
 import matplotlib.pyplot as plt
 
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
 # path to data
 sys.path.append(os.path.join(os.getcwd(), "../../../data"))
 from data.data_utils import load_dataset
@@ -21,9 +23,6 @@ def init_randn(m, n, rs=npr.RandomState(0)):
 
 
 def init_xavier(m, n, rs=npr.RandomState(0)):
-    """ TODO: init mxn matrix using Xavier intialization
-    """
-
     return rs.randn(m, n) / np.sqrt(m)
 
 
@@ -40,46 +39,32 @@ def relu(x):
 
 
 def neural_net_predict(params, inputs):
-    """Implements a deep neural network for classification.
-       params is a list of (weights, bias) tuples.
-       inputs is an (N x D) matrix.
-       returns normalized class log-probabilities."""
     for W, b in params:
         outputs = np.dot(inputs, W) + b # general formula for transformation of a layer in neural net
         inputs = relu(outputs)
-    '''
-    log sum exp is exactly what it sounds like: the log of the sum of the exponents of
-    all the terms in a vector/matrix row/matrix col
-    
-    '''
     return outputs - logsumexp(outputs, axis=1, keepdims=True)
 
 
 def mean_log_like(params, inputs, targets):
-    """ TODO: return the log-likelihood / the number of inputs
-    our optimization is done in batches, so we should be computing
-    log-likelihood for eneitre batch, then dividing by number of input points
-    """
     # raise NotImplementedError("mean_log_like function not completed (see Q3).")
     # print('computing mean-log-like')
-    for W, b in params:
-        outputs = np.dot(inputs, W) + b
-        inputs = relu(outputs)
-    outputs = relu(outputs)
-    log_p = 0
-    # print(outputs)
-    # each output is an array of ten bools
-    # for each output, compute log-likelihod sum
-    # add all terms up, then divide by number of inputs
+    return np.mean(neural_net_predict(params, inputs) * targets) * 10
 
-    # TODO: confirm that this function is at all remotely correct, then tune parameters
+def mean_log_like2(params, inputs, targets):
+    N = len(inputs)
+    for W, b in params:
+        outputs = np.dot(inputs, W) + b # general formula for transformation of a layer in neural net
+        inputs = relu(outputs)
+    # outputs = relu(outputs - logsumexp(outputs, axis=1, keepdims=True))
+    log_p = 0
     for i, f_hat in enumerate(outputs):
         for j, val in enumerate(f_hat):
             if targets[i][j]:
-                if (val != 0):
-                    log_p += np.log(val)
-    
-    return log_p
+                if (val > 0):
+                    continue
+                else:
+                    outputs[i][j] = 0
+    return log_p / N
 
 
 
@@ -93,21 +78,26 @@ def accuracy(params, inputs, targets):
 
 
 if __name__ == "__main__":
+    ''' best so far: roughly 57% with 100 0.0004 10000 [784, 512, 10] (peaks at 50 iterations)
+    some ideas:
+        - two hidden layers? how many units in each?
+        - probably best to tune the layer count first, then worry about getting good grad desc params
+    '''
     # ----------------------------------------------------------------------------------
     # EXAMPLE OF HOW TO USE STARTER CODE BELOW
     # ----------------------------------------------------------------------------------
 
     # loading data
     x_train, x_valid, x_test, y_train, y_valid, y_test = load_dataset("mnist_small")
-
+    # print(len(x_train))
     # initializing parameters
-    layer_sizes = [784, 200, 10]
+    layer_sizes = [784, 392,10]
     params = init_net_params(layer_sizes, init_randn)
 
     # setting up training parameters
-    num_epochs = 5
-    learning_rate = 1e-1
-    batch_size = 256
+    num_epochs = 30
+    learning_rate = 2e-3
+    batch_size = 1000 # total of 10000 datapoints
 
     # Constants for batching
     num_batches = int(np.ceil(len(x_train) / batch_size))
@@ -127,7 +117,7 @@ if __name__ == "__main__":
 
     # Get gradient of objective using autograd.
     objective_grad = grad(objective)
-
+    print(num_epochs, learning_rate, batch_size, layer_sizes)
     print("     Epoch     |    Train accuracy  |       Test accuracy  ")
 
     # Dictionary to store train/val history
@@ -135,6 +125,8 @@ if __name__ == "__main__":
         "train_nll": [],
         "val_nll": [],
     }
+    global g_params
+    g_params = None
 
     def callback(params, iter, gradient):
         if iter % num_batches == 0:
@@ -144,6 +136,8 @@ if __name__ == "__main__":
             train_acc = accuracy(params, x_train, y_train)
             val_acc = accuracy(params, x_valid, y_valid)
             print("{:15}|{:20}|{:20}".format(iter // num_batches, train_acc, val_acc))
+            global g_params
+            g_params = params
 
     # We will optimize using Adam (a variant of SGD that makes better use of
     # gradient information).
@@ -154,8 +148,19 @@ if __name__ == "__main__":
         num_iters=num_epochs * num_batches,
         callback=callback,
     )
-
     # Plotting the train and validation negative log-likelihood
-    plt.plot(opt_history["train_nll"])
-    plt.plot(opt_history["val_nll"])
+    plt.plot(opt_history["train_nll"], label='training')
+    plt.plot(opt_history["val_nll"], label = 'validation')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    # plt.show()
+    plt.cla()
+    target_class = np.argmax(y_test, axis=1)
+    predicted_class = np.argmax(neural_net_predict(g_params, x_test), axis=1)
+    cm = confusion_matrix(predicted_class, target_class)
+    disp = ConfusionMatrixDisplay(cm)
+    disp.plot()
     plt.show()
+
+
