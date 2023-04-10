@@ -50,7 +50,7 @@ def load_cyl2d_dataset(print_details=False):
 
     return x_train, x_valid, x_test, y_train, y_valid, y_test, xdim, ydim
 
-def find_pca_matrix(y_train, z_d):
+def find_pca_matrix(y_train : np.ndarray, z_d):
     """
     Finds the matrix that encodes/decodes a dataset via PCA.
 
@@ -62,8 +62,17 @@ def find_pca_matrix(y_train, z_d):
         pca_matrix : the PCA mode matrix, and 
         pca_vector : the PCA mean vector, where np.matmul(y_train - pca_vec, pca_matrix) = z_train
     """
-    """ YOUR CODE HERE """
-    pass
+    print("getting prinicpal components...")
+    # columns are z_d long, and there as many columns as there are training points
+    pca_vec = np.mean(y_train, axis=0) # each row of y_train is a single point, take mean over axis=0
+    sigma = np.cov(y_train - pca_vec, rowvar=False) # by default, interprets a single row as a single point
+    eigenvals, eigenvecs = np.linalg.eigh(sigma)
+    
+    components = eigenvecs[:z_d]
+    pca_matrix = components.T
+    print(pca_matrix.shape, pca_vec.shape)
+        
+    return pca_matrix, pca_vec
 
 def sqexp_kernel(x, z, theta=1, variance=1.):
     """ one-dimensional squared exponential kernel with lengthscale theta """
@@ -113,10 +122,16 @@ if __name__ == "__main__":
     # loading data
     x_train, x_valid, x_test, y_train, y_valid, y_test, xdim, ydim = load_cyl2d_dataset()
 
+    
+    
     # state is currently flattened, keep track of true shape for plotting
     state_shape = [ydim.shape[0], xdim.shape[0], 2]
 
     # define pca dimension
+    '''
+    we are assuming four latent variables; that is, four hidden variables that
+    we hope can sufficiently encapsulate the entire flow over all 25,600 pixels
+    '''
     z_d = 4
 
     # plot state at last time step of training set
@@ -129,11 +144,21 @@ if __name__ == "__main__":
 
     # do pca
     pca_matrix, pca_vec = find_pca_matrix(y_train, z_d)
+    '''
+    for Q2: find RMSE between the original and reconstruction for the last vector
+    '''
+    y_f = y_test[-1]
+    avg = np.mean(y_f)
+    y_f_reconst = pca_matrix.T.dot(pca_matrix).dot(y_f - pca_vec) + pca_vec
+    print(np.sqrt(np.mean(y_f - y_f_reconst)))
+    print('for reference: average value in y_f was', avg)
 
     # encode flow state
     z_train = np.matmul(y_train - pca_vec, pca_matrix)
     z_valid = np.matmul(y_valid - pca_vec, pca_matrix)
     z_test = np.matmul(y_test - pca_vec, pca_matrix)
+    z_valid_pred_mean = None # TODO: initializes just to avoid error messages
+    z_test_pred_mean = None
 
     # do type-ii inference for kernel hyperparameters
     """ YOUR CODE HERE """

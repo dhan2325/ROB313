@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\setlength{\parskip}{12pt}
+
+\usepackage{geometry}
+\geometry{margin = 0.7in}
+
+\usepackage{float}
+\usepackage{graphicx}
+\graphicspath{{./images/}}
+
+\usepackage{mathtools, amssymb, amsmath}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{listings}
+\lstset{
+basicstyle=\small\ttfamily,
+columns=flexible,
+breaklines=true
+}
+
+
+\title{ROB313: Assignment 4}
+\author{Daniel Han: 1006842534}
+\date{April 2023}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Data Partitioning}
+The proposed data partitioning allocates 1001 data points for training, 200 for validation, and 300 for testing. While the proposed partitioning splits the data into reasonably sized proportions between the three subsets, the subsets are split chronologically, which could be disadvantageous, since it forces the model to train on the first 1001 time steps, and then the validation and test sets would just be measuring its ability to extrapolate beyond the time steps included in the training data.
+
+It would be more appropriate to ensure that data points from various periods in the flow are included in each of the three data subsets. This can be done in a couple of ways. One could iterative assign each time step's measurement to one of the three sets, starting with time step 0 and working to the final time frame (i.e. assign 10 points to training, 2 points to validation, 3 points to testing, etc.). Alternatively, one could also randomize the ordering of the data points, then partition the reordered dataset as done previously. In any case, it would be beneficial to have a partitioning method that does not explicitly force the model to extrapolate to predict on the validation and test sets, and randomizing the ordering of the data points could improve the probability of each of the subsets having greater variety in the time step from which their data points were drawn.
+
+
+
+\end{document}
