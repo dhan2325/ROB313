@@ -51,7 +51,7 @@ def load_cyl2d_dataset(print_details=False):
 
     return x_train, x_valid, x_test, y_train, y_valid, y_test, xdim, ydim
 
-def find_pca_matrix(y_train : np.ndarray, z_d):
+def find_pca_matrix(y_train, z_d):
     """
     Finds the matrix that encodes/decodes a dataset via PCA.
 
@@ -63,18 +63,18 @@ def find_pca_matrix(y_train : np.ndarray, z_d):
         pca_matrix : the PCA mode matrix, and 
         pca_vector : the PCA mean vector, where np.matmul(y_train - pca_vec, pca_matrix) = z_train
     """
-    print("getting prinicpal components...")
-    start = time.time()
-    # columns are z_d long, and there as many columns as there are training points
-    pca_vec = np.mean(y_train, axis=0) # each row of y_train is a single point, take mean over axis=0
-    sigma = np.cov(y_train - pca_vec, rowvar=False) # by default, interprets a single row as a single point
-    eigenvals, eigenvecs = np.linalg.eigh(sigma)
-    
-    components = eigenvecs[:z_d] # get the first four columns
-    pca_matrix = components.T # we have first four columns. Transposed, gives us a 25600 row matrix, U^T
-    # print(pca_matrix.shape, pca_vec.shape)
-    print('PCA matrix, vector found in {}s'.format(time.time() - start))
-    
+    # Compute the mean of the dataset
+    pca_vec = np.mean(y_train, axis=0)
+
+    # Center the dataset by subtracting the mean
+    y_centered = y_train - pca_vec
+
+    # Perform singular value decomposition (SVD)
+    u, s, vh = np.linalg.svd(y_centered, full_matrices=False)
+
+    # Take the first z_d columns of vh to form the PCA matrix
+    pca_matrix = vh[:z_d, :].T
+
     return pca_matrix, pca_vec
 
 def sqexp_kernel(x, z, theta=1, variance=1.):
@@ -197,7 +197,7 @@ if __name__ == "__main__":
 
 
     
-
+    plt.show()
 
 
     z_valid_pred_mean = None # TODO: initializes just to avoid error messages
