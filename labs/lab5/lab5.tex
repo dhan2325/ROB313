@@ -38,6 +38,17 @@ The proposed data partitioning allocates 1001 data points for training, 200 for 
 
 It would be more appropriate to ensure that data points from various periods in the flow are included in each of the three data subsets. This can be done in a couple of ways. One could iterative assign each time step's measurement to one of the three sets, starting with time step 0 and working to the final time frame (i.e. assign 10 points to training, 2 points to validation, 3 points to testing, etc.). Alternatively, one could also randomize the ordering of the data points, then partition the reordered dataset as done previously. In any case, it would be beneficial to have a partitioning method that does not explicitly force the model to extrapolate to predict on the validation and test sets, and randomizing the ordering of the data points could improve the probability of each of the subsets having greater variety in the time step from which their data points were drawn.
 
+\section{PCA of flow data}
+\subsection{Determining PCA matrix for the dataset}
+To perform a Gaussian Process analysis on a dataset with 25600 dimensions is not computationally viable for most parties not having access to a NASA supercomputer, which the author did not (at least at the time of writing this document). Thus, to save on computation without disregarding performance, a PCA could be performed to reduce the dimensionality of the dataset to a more manageable number. The number of reduced dimensions used was denoted $z_d$ (kept at a value of 4 for this assignment). To perform PCA, a vector $\mathbf{b} \in \mathbb{R}^{D}$ and a matrix $\mathbf{U} \in \mathbb{R}^{d \times D}$ were required to compute $\mathbf{z}$, the reduced dimension data points as $\mathbf{z} = \mathbf{U^T}(\mathbf{y} - \mathbf{b})$.
+
+To minimize the reconstruction error and thereby keep the reduced data points as true as possible to the original data, one can select $\mathbf{b}$ to be equal to the mean of the original data points, then find the projection matrix from the covariance matrix of the 25600 original dimensions. Using the Courant-Fischer Theorem, the first $z_d$ principal components of the dataset corresponded to the $z_d$ eigenvectors of $\mathbf{\Sigma}$ with the largest corresponding eigenvalues, where $\Sigma$ is the covariance matrix of the dataset's variables. The matrix $\mathbf{U}$ can then be constructed by assigning its rows to be equal to the eigenvectors selected.
+
+\subsection{Reconstruction with reduced dimensionality of 4}
+hahaha
+% TODO: get plots of each element of z over time
+
+
 
 
 \end{document}

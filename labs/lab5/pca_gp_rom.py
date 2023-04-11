@@ -68,10 +68,10 @@ def find_pca_matrix(y_train : np.ndarray, z_d):
     sigma = np.cov(y_train - pca_vec, rowvar=False) # by default, interprets a single row as a single point
     eigenvals, eigenvecs = np.linalg.eigh(sigma)
     
-    components = eigenvecs[:z_d]
-    pca_matrix = components.T
+    components = eigenvecs[:z_d] # get the first four columns
+    pca_matrix = components.T # we have first four columns. Transposed, gives us a 25600 row matrix, U^T
     print(pca_matrix.shape, pca_vec.shape)
-        
+    
     return pca_matrix, pca_vec
 
 def sqexp_kernel(x, z, theta=1, variance=1.):
@@ -136,11 +136,11 @@ if __name__ == "__main__":
 
     # plot state at last time step of training set
     f, axarr = plt.subplots(1, 2)
-    img = axarr[0].imshow(np.reshape(y_train[-1], state_shape)[:,:,0])
+    """ img = axarr[0].imshow(np.reshape(y_train[-1], state_shape)[:,:,0])
     f.colorbar(img, ax=axarr[0])
     img = axarr[1].imshow(np.reshape(y_train[-1], state_shape)[:,:,1])
     f.colorbar(img, ax=axarr[1])
-    plt.show()
+    plt.show() """
 
     # do pca
     pca_matrix, pca_vec = find_pca_matrix(y_train, z_d)
@@ -149,8 +149,10 @@ if __name__ == "__main__":
     '''
     y_f = y_test[-1]
     avg = np.mean(y_f)
-    y_f_reconst = pca_matrix.T.dot(pca_matrix).dot(y_f - pca_vec) + pca_vec
-    print(np.sqrt(np.mean(y_f - y_f_reconst)))
+    #y_f_reconst = ((pca_matrix.T).dot(pca_matrix)).dot(y_f - pca_vec) + pca_vec
+    print(pca_matrix.shape, pca_matrix.T.shape, pca_vec.shape)
+    y_f_reconst = np.matmul(pca_matrix, np.matmul(pca_matrix.T, y_f - pca_vec)) + pca_vec
+    print( np.mean( y_f-y_f_reconst)**2 )
     print('for reference: average value in y_f was', avg)
 
     # encode flow state
@@ -167,8 +169,8 @@ if __name__ == "__main__":
     """ YOUR CODE HERE """
 
     # decode predictions
-    y_valid_pred_mu = np.matmul(z_valid_pred_mean, pca_matrix) + pca_vec
+    """ y_valid_pred_mu = np.matmul(z_valid_pred_mean, pca_matrix) + pca_vec
     y_test_pred_mu = np.matmul(z_test_pred_mean, pca_matrix) + pca_vec
-
+ """
     # plot prediction at final time step
     """ YOUR CODE HERE """
