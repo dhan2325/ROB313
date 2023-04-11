@@ -3,6 +3,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 from scipy.linalg import cho_factor, cho_solve
+import time
 
 def load_cyl2d_dataset(print_details=False):
     """
@@ -63,6 +64,7 @@ def find_pca_matrix(y_train : np.ndarray, z_d):
         pca_vector : the PCA mean vector, where np.matmul(y_train - pca_vec, pca_matrix) = z_train
     """
     print("getting prinicpal components...")
+    start = time.time()
     # columns are z_d long, and there as many columns as there are training points
     pca_vec = np.mean(y_train, axis=0) # each row of y_train is a single point, take mean over axis=0
     sigma = np.cov(y_train - pca_vec, rowvar=False) # by default, interprets a single row as a single point
@@ -70,7 +72,8 @@ def find_pca_matrix(y_train : np.ndarray, z_d):
     
     components = eigenvecs[:z_d] # get the first four columns
     pca_matrix = components.T # we have first four columns. Transposed, gives us a 25600 row matrix, U^T
-    print(pca_matrix.shape, pca_vec.shape)
+    # print(pca_matrix.shape, pca_vec.shape)
+    print('PCA matrix, vector found in {}s'.format(time.time() - start))
     
     return pca_matrix, pca_vec
 
@@ -150,15 +153,53 @@ if __name__ == "__main__":
     y_f = y_test[-1]
     avg = np.mean(y_f)
     #y_f_reconst = ((pca_matrix.T).dot(pca_matrix)).dot(y_f - pca_vec) + pca_vec
-    print(pca_matrix.shape, pca_matrix.T.shape, pca_vec.shape)
+    # print(pca_matrix.shape, pca_matrix.T.shape, pca_vec.shape)
     y_f_reconst = np.matmul(pca_matrix, np.matmul(pca_matrix.T, y_f - pca_vec)) + pca_vec
     print( np.mean( y_f-y_f_reconst)**2 )
-    print('for reference: average value in y_f was', avg)
+    print('average value in y_f was', avg)
 
     # encode flow state
+    print('determining latent states for flow')
     z_train = np.matmul(y_train - pca_vec, pca_matrix)
     z_valid = np.matmul(y_valid - pca_vec, pca_matrix)
     z_test = np.matmul(y_test - pca_vec, pca_matrix)
+    print('latent flows determined')
+
+    # plot the four latent variables
+    print(z_train.shape)
+    z1, z2, z3, z4 = [], [], [], []
+    x = range(1501)
+    for z_point in z_train:
+        z1.append(z_point[0])
+        z2.append(z_point[1])
+        z3.append(z_point[2])
+        z4.append(z_point[3])
+    for z_point in z_valid:
+        z1.append(z_point[0])
+        z2.append(z_point[1])
+        z3.append(z_point[2])
+        z4.append(z_point[3])
+    for z_point in z_test:
+        z1.append(z_point[0])
+        z2.append(z_point[1])
+        z3.append(z_point[2])
+        z4.append(z_point[3])
+    
+    fig, axs = plt.subplots(2,2)
+    axs[0,0].plot(x, z1)
+    axs[0,0].set_title('z1')
+    axs[0,1].plot(x, z2)
+    axs[0,1].set_title('z2')
+    axs[1,0].plot(x, z3)
+    axs[1,0].set_title('z3')
+    axs[1,1].plot(x, z4)
+    axs[1,1].set_title('z4')
+
+
+    
+
+
+
     z_valid_pred_mean = None # TODO: initializes just to avoid error messages
     z_test_pred_mean = None
 
