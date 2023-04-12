@@ -86,13 +86,33 @@ def matern_kernel(x, z, theta=1, variance=1.):
     """ YOUR CODE HERE """
     pass
 
-def gp_prediction(x, y, x_test, kernel, noise_var):
+def gp_prediction(x, y, x_test, kernel, noise_var = 1e-6):
     """ Computes posterior mean and cov at x_test given data x, y """
     """ THIS IS CURRENTLY FOR SCALAR TARGETS ONLY """
-    x = x.reshape((-1, 1))
+
+    '''
+    x, y are training features, targets, and we predict on x_test.
+    kernel is a function arg specifying the kernel to use
+    we are able to find the posterior predictive distribution's
+    mean and variance.
+    
+    In our case, we will have N_test testing points, each of which have D = 4
+    components. We are able to compute a different mean for each data point (N_test)
+
+    Covariance will be N_test squared matrix, since we can find teh expected covariance for any given
+    pair of test points.
+
+    Finally, we will have to repeat the process for all four latent states, adding a dimension
+    of four to both our mean and covariance
+
+    for performance, perform the process one latent state at a time: that way, we'll only
+    have to compute each gram matrix once.
+    '''
+    x = x.reshape((-1, 1)) # each scalar entry should not be its own subarray
     y = y.reshape((-1, 1))
     x_test = x_test.reshape((-1, 1))
 
+    # number of training, test points
     N = x.shape[0]
     N_test = x_test.shape[0]
 
@@ -105,6 +125,7 @@ def gp_prediction(x, y, x_test, kernel, noise_var):
         - kernel(x_test, x).dot(cho_solve(C, kernel(x, x_test)))
     )
     return mu_pred, cov_pred
+
 
 def gp_evidence(x, y, kernel, noise_var):
     """ Computes the GP log marginal likelihood """
