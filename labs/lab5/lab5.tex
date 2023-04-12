@@ -48,7 +48,8 @@ To minimize the reconstruction error and thereby keep the reduced data points as
 hahaha
 % TODO: get plots of each element of z over time
 
-
+\section{Element-wise predictions for the GP}
+Having been provided code that could perform a GP prediction on a scalar input, we were tasked with extending this function to work for our multi-dimensional PCA representation of the original data. Denoting our reduced dimensionality as $D = 4$, we could simply treat each of the $D$ features as independent scalars and use the code provided to compute the posterior $\boldsymbol{\mu}$ and $\mathbf{\Sigma}$ for each of the four features. Then, stacking the resulting mean vectors and covariance matrices, we would have, in two matrices, our predictions for the distributions of each test point in succinct form.
 
 
 \end{document}
