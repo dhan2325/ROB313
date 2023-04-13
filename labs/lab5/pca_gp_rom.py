@@ -148,7 +148,7 @@ def gp_pred_multidim(x : np.ndarray, y, x_test, kernel, noise_var = 1e-6):
     
 
 
-def gp_evidence(x, y, kernel, noise_var):
+def gp_evidence(x, y, kernel, noise_var = 1e-6):
     """ Computes the GP log marginal likelihood """
     """ THIS IS CURRENTLY FOR SCALAR TARGETS ONLY """
     N = x.shape[0]
@@ -164,10 +164,10 @@ def gp_evidence(x, y, kernel, noise_var):
     return log_evidence
     # will return a single scalar of the evidence for the scalar target
 
-def gp_ev_multidim(x, y, kernel, noise_var):
+def gp_ev_multidim(x, y, kernel, noise_var = 1e-6):
     N = x.shape[0]
     C = cho_factor(kernel(x, x) + noise_var*np.identity(N))    
-    D = x.shape[1]
+    D = y.shape[1]
     logs = []
     for dim in range(D):
         y_i = y[:,dim]
@@ -180,12 +180,10 @@ def gp_ev_multidim(x, y, kernel, noise_var):
         )
         
         logs.append(log_i)
-    log_evidence = np.vstack(log_evidence)
+    log_evidence = np.vstack(logs)
     return log_evidence
         
-        
-        
-    
+
 
 if __name__ == "__main__":
     # loading data
@@ -249,17 +247,20 @@ if __name__ == "__main__":
     axs[0,1].plot(x, z2); axs[0,1].set_title('z2')
     axs[1,0].plot(x, z3); axs[1,0].set_title('z3')
     axs[1,1].plot(x, z4); axs[1,1].set_title('z4')
+    plt.show()
 
     '''
     For Q3: perform the multidimensional predictions for the latent states
     '''
+    print("Predicting distribution paramters...   ", end = '')
     z_test_pred_mean, z_test_pred_cov = gp_pred_multidim(x_train, z_train, x_test, sqexp_kernel)
-    
+    print('done')
     '''
     for Q4: find the GP log marginal likelihood for all four latent states
     '''
-    
-    
+    print('finding evidence...   ', end = '')
+    gp_ev_multidim(x_test, z_test, sqexp_kernel)
+    print('done')
 
     # do type-ii inference for kernel hyperparameters
     """ YOUR CODE HERE """

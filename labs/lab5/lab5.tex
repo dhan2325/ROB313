@@ -96,4 +96,48 @@ def gp_pred_multidim(x : np.ndarray, y, x_test, kernel, noise_var = 1e-6):
     return mu, cov
 \end{verbatim}
 
+
+\section{Element-wise log evidence}
+Following the same procedure as was done for the covariance and mean predictions, the provided \verb+gp_evidence+ function was modified to deal with multidimensional targets. The modified function definition is shown below.
+
+\begin{verbatim}
+def gp_ev_multidim(x, y, kernel, noise_var = 1e-6):
+    N = x.shape[0]
+    C = cho_factor(kernel(x, x) + noise_var*np.identity(N))    
+    D = y.shape[1]
+    logs = []
+    for dim in range(D):
+        y_i = y[:,dim]
+        y_i = y_i.reshape((-1,1))
+        
+        log_i = (
+        0.5*y_i.T.dot(cho_solve(C,y))
+        -np.sum(np.log(np.diag(C[0])))
+        - 0.5*N*np.log(2*np.pi)
+        )
+        
+        logs.append(log_i)
+    log_evidence = np.vstack(logs)
+    return log_evidence
+\end{verbatim}
+
+\section{Performing Type-II Inference}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \end{document}
