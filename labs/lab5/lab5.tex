@@ -45,8 +45,14 @@ To perform a Gaussian Process analysis on a dataset with 25600 dimensions is not
 To minimize the reconstruction error and thereby keep the reduced data points as true as possible to the original data, one can select $\mathbf{b}$ to be equal to the mean of the original data points, then find the projection matrix from the covariance matrix of the 25600 original dimensions. Using the Courant-Fischer Theorem, the first $z_d$ principal components of the dataset corresponded to the $z_d$ eigenvectors of $\mathbf{\Sigma}$ with the largest corresponding eigenvalues, where $\Sigma$ is the covariance matrix of the dataset's variables. The matrix $\mathbf{U}$ can then be constructed by assigning its rows to be equal to the eigenvectors selected.
 
 \subsection{Reconstruction with reduced dimensionality of 4}
-hahaha
-% TODO: get plots of each element of z over time
+To get a better qualitative undestanding of the four latent states, each of the four latent statesd was plotted over time to visualize the data.
+
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.35]{latent_states_plot}
+\caption{Plots of the four latent states over the flow sequence}
+\end{center}
+\end{figure}
 
 \section{Element-wise predictions for the GP}
 Having been provided code that could perform a GP prediction on a scalar input, we were tasked with extending this function to work for our multi-dimensional PCA representation of the original data. Denoting our reduced dimensionality as $D = 4$, we could simply treat each of the $D$ features as independent scalars and use the code provided to compute the posterior $\boldsymbol{\mu}$ and $\mathbf{\Sigma}$ for each of the four features. Then, stacking the resulting mean vectors and covariance matrices, we would have, in two matrices, our predictions for the distributions of each test point in succinct form.

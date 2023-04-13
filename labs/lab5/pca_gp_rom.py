@@ -79,6 +79,8 @@ def find_pca_matrix(y_train, z_d):
 
 def sqexp_kernel(x, z, theta=1, variance=1.):
     """ one-dimensional squared exponential kernel with lengthscale theta """
+    # x = x.reshape((len(x), 1))
+    # z = z.reshape((len(z), 1))
     return variance * np.exp(-np.square(x - z.T) / theta)
 
 def matern_kernel(x, z, theta=1, variance=1.):
@@ -90,24 +92,6 @@ def gp_prediction(x, y, x_test, kernel, noise_var = 1e-6):
     """ Computes posterior mean and cov at x_test given data x, y """
     """ THIS IS CURRENTLY FOR SCALAR TARGETS ONLY """
 
-    '''
-    x, y are training features, targets, and we predict on x_test.
-    kernel is a function arg specifying the kernel to use
-    we are able to find the posterior predictive distribution's
-    mean and variance.
-    
-    In our case, we will have N_test testing points, each of which have D = 4
-    components. We are able to compute a different mean for each data point (N_test)
-
-    Covariance will be N_test squared matrix, since we can find teh expected covariance for any given
-    pair of test points.
-
-    Finally, we will have to repeat the process for all four latent states, adding a dimension
-    of four to both our mean and covariance
-
-    for performance, perform the process one latent state at a time: that way, we'll only
-    have to compute each gram matrix once.
-    '''
     x = x.reshape((-1, 1)) # each scalar entry should not be its own subarray
     y = y.reshape((-1, 1))
     x_test = x_test.reshape((-1, 1))
@@ -125,6 +109,39 @@ def gp_prediction(x, y, x_test, kernel, noise_var = 1e-6):
         - kernel(x_test, x).dot(cho_solve(C, kernel(x, x_test)))
     )
     return mu_pred, cov_pred
+
+
+def gp_pred_multidim(x : np.ndarray, y, x_test, kernel, noise_var = 1e-6):
+    """
+    we have four scalar targets (elements of y),
+    each of which need to be tested across all time steps (time steps in x_test)
+    perform iteratively using the same time steps every time, but a different column of y_test
+    """
+
+    #x = x.reshape((-1, 1)) # each scalar entry should not be its own subarray
+    #x_test = x_test.reshape((-1, 1))
+    print(y.shape)
+    D = y.shape[1]
+    N = x.shape[0]
+    N_test = x_test.shape[0]
+    # x = x.reshape((-1, 1))
+    x_test = x_test.reshape((-1, 1))
+    for dim in range(D):
+        # x, x_test are the same every time
+        y_i = y[:,dim] # extract only the colummn of i we want
+        y_i = y_i.reshape((-1,1))
+        
+        C = cho_factor(kernel(x, x) + noise_var*np.identity(N))
+        print("C:", C[0].shape)
+        
+        mu_pred = kernel(x_test, x).dot(cho_solve(C, y_i))
+        print("mu:", mu_pred.shape)
+        
+        cov_pred = (
+            kernel(x_test, x_test) + noise_var*np.identity(N_test)
+            - kernel(x_test, x).dot(cho_solve(C, kernel(x, x_test)))
+        )
+        print("Cov:", cov_pred.shape)
 
 
 def gp_evidence(x, y, kernel, noise_var):
@@ -145,6 +162,7 @@ def gp_evidence(x, y, kernel, noise_var):
 if __name__ == "__main__":
     # loading data
     x_train, x_valid, x_test, y_train, y_valid, y_test, xdim, ydim = load_cyl2d_dataset()
+    # print("shape of y: {}, {}".format(y_train.shape[0], y_train.shape[1]))
 
     
     
@@ -168,8 +186,13 @@ if __name__ == "__main__":
 
     # do pca
     pca_matrix, pca_vec = find_pca_matrix(y_train, z_d)
+
+    pca_m_test, pca_v_test = find_pca_matrix(y_test, z_d)
+
+    
+
     '''
-    for Q2: find RMSE between the original and reconstruction for the last vector
+    for Q2: find MSE between the original and reconstruction for the last vector
     '''
     y_f = y_test[-1]
     avg = np.mean(y_f)
@@ -184,6 +207,12 @@ if __name__ == "__main__":
     z_train = np.matmul(y_train - pca_vec, pca_matrix)
     z_valid = np.matmul(y_valid - pca_vec, pca_matrix)
     z_test = np.matmul(y_test - pca_vec, pca_matrix)
+
+    '''
+    For Q3: perform the multidimensional predictions for the latent states
+    '''
+    z_test_pred_mean, z_test_pred_cov = gp_pred_multidim(x_train, z_train, x_test, sqexp_kernel)
+    
     print('latent flows determined')
 
     # plot the four latent variables
