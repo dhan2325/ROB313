@@ -121,8 +121,14 @@ def gp_ev_multidim(x, y, kernel, noise_var = 1e-6):
     return log_evidence
 \end{verbatim}
 
-\section{Performing Type-II Inference}
+\section{Optimizing kernel hyperparamters with type-II inference}
+To find the kernel hyperparamters that would work best for our model, type-II inference was used to determine the hyperparamters that would maximize the marginal likelihood. Finding the hyperparameters that work best for the model can then be treated as an optimization problem looking to maximize the marginal likelihood over the space of hyperparamters.
 
+There are multiple library functions in Python3 that are able to perform minimization. For this optimization problem, \verb+scipy.optimize.minimize+ was selected for a few reasons: the objective function is not required as an algebraic expression, arguments that are not constant during optimization can be specified separately, and the numeric method used to solve the optimization problem can easily be changed in case one doesn't work. In order to use the function, the \verb+gp_evidence+ function needed to be refactored slightly to fit the form requested by the \verb+scipy+ optimization function. The refactored form is shown below:
+
+\begin{verbatim}
+TODOOOOOO
+\end{verbatim}
 
 
 

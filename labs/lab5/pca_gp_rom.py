@@ -182,6 +182,9 @@ def gp_ev_multidim(x, y, kernel, noise_var = 1e-6):
         logs.append(log_i)
     log_evidence = np.vstack(logs)
     return log_evidence
+
+def sqexp_marginal(hyper : tuple(float, float), args : tuple(np.ndarray, np.ndarray)):
+    pass
         
 
 
@@ -263,7 +266,11 @@ if __name__ == "__main__":
     print('done')
 
     # do type-ii inference for kernel hyperparameters
-    """ YOUR CODE HERE """
+    '''
+    for Q5: find the hyperparameters of the sqexp kernel that maximize
+    the likelihood of our training set observations as a function of the 
+    hyperparamters of the kernel.
+    '''
 
     # do gp prediction over validation and test sets
     """ YOUR CODE HERE """
