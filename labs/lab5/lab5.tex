@@ -57,5 +57,43 @@ To get a better qualitative undestanding of the four latent states, each of the 
 \section{Element-wise predictions for the GP}
 Having been provided code that could perform a GP prediction on a scalar input, we were tasked with extending this function to work for our multi-dimensional PCA representation of the original data. Denoting our reduced dimensionality as $D = 4$, we could simply treat each of the $D$ features as independent scalars and use the code provided to compute the posterior $\boldsymbol{\mu}$ and $\mathbf{\Sigma}$ for each of the four features. Then, stacking the resulting mean vectors and covariance matrices, we would have, in two matrices, our predictions for the distributions of each test point in succinct form.
 
+The code provided was used without any significant changes to find the mean vector and covariance prediction for each of the latent states independently. A minor implementation change was made to reshape the x matrices only for the functions that required them. For instance, for the squared exponent kernel provided, a 1-D array inputs were reshaped to 2-D array inputs with the second axis being of length one. The code used in provided below.
+
+\begin{verbatim}
+def gp_pred_multidim(x : np.ndarray, y, x_test, kernel, noise_var = 1e-6):
+    """
+    we have four scalar targets (elements of y),
+    each of which need to be tested across all time steps (time steps in x_test)
+    perform iteratively using the same time steps every time, but a different column of y_test
+    return stacked matrices of all four variables in one
+    """
+    print(y.shape)
+    D = y.shape[1]
+    N = x.shape[0]
+    N_test = x_test.shape[0]
+    x_test = x_test.reshape((-1, 1))
+    list_mu = []
+    list_cov = []
+    for dim in range(D):
+        # x, x_test are the same every time
+        y_i = y[:,dim] # extract only the colummn of i we want
+        y_i = y_i.reshape((-1,1))
+        
+        C = cho_factor(kernel(x, x) + noise_var*np.identity(N))
+        
+        mu_pred = kernel(x_test, x).dot(cho_solve(C, y_i))
+        list_mu.append(mu_pred)
+        
+        cov_pred = (
+            kernel(x_test, x_test) + noise_var*np.identity(N_test)
+            - kernel(x_test, x.reshape((-1,1))).dot(cho_solve(C, kernel(x.reshape((-1,1)), x_test)))
+        )
+        list_cov.append(cov_pred)
+    
+    mu = np.hstack(list_mu)
+    cov = np.stack(list_cov, axis = 2)
+    print("shape of mean covariance matrices: {}, {}".format(mu.shape, cov.shape))
+    return mu, cov
+\end{verbatim}
 
 \end{document}

@@ -116,32 +116,36 @@ def gp_pred_multidim(x : np.ndarray, y, x_test, kernel, noise_var = 1e-6):
     we have four scalar targets (elements of y),
     each of which need to be tested across all time steps (time steps in x_test)
     perform iteratively using the same time steps every time, but a different column of y_test
+    return stacked matrices of all four variables in one
     """
-
-    #x = x.reshape((-1, 1)) # each scalar entry should not be its own subarray
-    #x_test = x_test.reshape((-1, 1))
     print(y.shape)
     D = y.shape[1]
     N = x.shape[0]
     N_test = x_test.shape[0]
-    # x = x.reshape((-1, 1))
     x_test = x_test.reshape((-1, 1))
+    list_mu = []
+    list_cov = []
     for dim in range(D):
         # x, x_test are the same every time
         y_i = y[:,dim] # extract only the colummn of i we want
         y_i = y_i.reshape((-1,1))
         
         C = cho_factor(kernel(x, x) + noise_var*np.identity(N))
-        print("C:", C[0].shape)
         
         mu_pred = kernel(x_test, x).dot(cho_solve(C, y_i))
-        print("mu:", mu_pred.shape)
+        list_mu.append(mu_pred)
         
         cov_pred = (
             kernel(x_test, x_test) + noise_var*np.identity(N_test)
-            - kernel(x_test, x).dot(cho_solve(C, kernel(x, x_test)))
+            - kernel(x_test, x.reshape((-1,1))).dot(cho_solve(C, kernel(x.reshape((-1,1)), x_test)))
         )
-        print("Cov:", cov_pred.shape)
+        list_cov.append(cov_pred)
+    
+    mu = np.hstack(list_mu)
+    cov = np.stack(list_cov, axis = 2)
+    print("shape of mean covariance matrices: {}, {}".format(mu.shape, cov.shape))
+    return mu, cov
+    
 
 
 def gp_evidence(x, y, kernel, noise_var):
@@ -158,6 +162,30 @@ def gp_evidence(x, y, kernel, noise_var):
     )
 
     return log_evidence
+    # will return a single scalar of the evidence for the scalar target
+
+def gp_ev_multidim(x, y, kernel, noise_var):
+    N = x.shape[0]
+    C = cho_factor(kernel(x, x) + noise_var*np.identity(N))    
+    D = x.shape[1]
+    logs = []
+    for dim in range(D):
+        y_i = y[:,dim]
+        y_i = y_i.reshape((-1,1))
+        
+        log_i = (
+        0.5*y_i.T.dot(cho_solve(C,y))
+        -np.sum(np.log(np.diag(C[0])))
+        - 0.5*N*np.log(2*np.pi)
+        )
+        
+        logs.append(log_i)
+    log_evidence = np.vstack(log_evidence)
+    return log_evidence
+        
+        
+        
+    
 
 if __name__ == "__main__":
     # loading data
@@ -170,10 +198,6 @@ if __name__ == "__main__":
     state_shape = [ydim.shape[0], xdim.shape[0], 2]
 
     # define pca dimension
-    '''
-    we are assuming four latent variables; that is, four hidden variables that
-    we hope can sufficiently encapsulate the entire flow over all 25,600 pixels
-    '''
     z_d = 4
 
     # plot state at last time step of training set
@@ -185,11 +209,11 @@ if __name__ == "__main__":
     plt.show() """
 
     # do pca
-    pca_matrix, pca_vec = find_pca_matrix(y_train, z_d)
+    print("finding PCA conversion...   ", end='')
+    pca_matrix, pca_vec = find_pca_matrix(y_train, z_d) # determine from training set, use to predict on valid, test sets
+    # pca_m_test, pca_v_test = find_pca_matrix(y_test, z_d)
+    print('done')
 
-    pca_m_test, pca_v_test = find_pca_matrix(y_test, z_d)
-
-    
 
     '''
     for Q2: find MSE between the original and reconstruction for the last vector
@@ -203,55 +227,39 @@ if __name__ == "__main__":
     print('average value in y_f was', avg)
 
     # encode flow state
-    print('determining latent states for flow')
+    print('determining latent states for flow...', end = '')
     z_train = np.matmul(y_train - pca_vec, pca_matrix)
     z_valid = np.matmul(y_valid - pca_vec, pca_matrix)
     z_test = np.matmul(y_test - pca_vec, pca_matrix)
+    print('done')
+    
+    # plot the PCA converted targets
+    print(z_train.shape)
+    z1, z2, z3, z4 = [], [], [], []
+    x = range(1501)
+    for z_point in z_train:
+        z1.append(z_point[0]); z2.append(z_point[1]); z3.append(z_point[2]); z4.append(z_point[3])
+    for z_point in z_valid:
+        z1.append(z_point[0]); z2.append(z_point[1]); z3.append(z_point[2]); z4.append(z_point[3])
+    for z_point in z_test:
+        z1.append(z_point[0]); z2.append(z_point[1]); z3.append(z_point[2]); z4.append(z_point[3])
+    
+    fig, axs = plt.subplots(2,2)
+    axs[0,0].plot(x, z1); axs[0,0].set_title('z1')
+    axs[0,1].plot(x, z2); axs[0,1].set_title('z2')
+    axs[1,0].plot(x, z3); axs[1,0].set_title('z3')
+    axs[1,1].plot(x, z4); axs[1,1].set_title('z4')
 
     '''
     For Q3: perform the multidimensional predictions for the latent states
     '''
     z_test_pred_mean, z_test_pred_cov = gp_pred_multidim(x_train, z_train, x_test, sqexp_kernel)
     
-    print('latent flows determined')
-
-    # plot the four latent variables
-    print(z_train.shape)
-    z1, z2, z3, z4 = [], [], [], []
-    x = range(1501)
-    for z_point in z_train:
-        z1.append(z_point[0])
-        z2.append(z_point[1])
-        z3.append(z_point[2])
-        z4.append(z_point[3])
-    for z_point in z_valid:
-        z1.append(z_point[0])
-        z2.append(z_point[1])
-        z3.append(z_point[2])
-        z4.append(z_point[3])
-    for z_point in z_test:
-        z1.append(z_point[0])
-        z2.append(z_point[1])
-        z3.append(z_point[2])
-        z4.append(z_point[3])
+    '''
+    for Q4: find the GP log marginal likelihood for all four latent states
+    '''
     
-    fig, axs = plt.subplots(2,2)
-    axs[0,0].plot(x, z1)
-    axs[0,0].set_title('z1')
-    axs[0,1].plot(x, z2)
-    axs[0,1].set_title('z2')
-    axs[1,0].plot(x, z3)
-    axs[1,0].set_title('z3')
-    axs[1,1].plot(x, z4)
-    axs[1,1].set_title('z4')
-
-
     
-    plt.show()
-
-
-    z_valid_pred_mean = None # TODO: initializes just to avoid error messages
-    z_test_pred_mean = None
 
     # do type-ii inference for kernel hyperparameters
     """ YOUR CODE HERE """
