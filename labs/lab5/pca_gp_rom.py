@@ -3,6 +3,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 from scipy.linalg import cho_factor, cho_solve
+from scipy.optimize import minimize as optim
 import time
 
 def load_cyl2d_dataset(print_details=False):
@@ -146,7 +147,24 @@ def gp_pred_multidim(x : np.ndarray, y, x_test, kernel, noise_var = 1e-6):
     print("shape of mean covariance matrices: {}, {}".format(mu.shape, cov.shape))
     return mu, cov
     
-
+def gp_ev_multidim(x, y, kernel, noise_var = 1e-6):
+    N = x.shape[0]
+    C = cho_factor(kernel(x, x) + noise_var*np.identity(N))    
+    D = y.shape[1]
+    logs = []
+    for dim in range(D):
+        y_i = y[:,dim]
+        y_i = y_i.reshape((-1,1))
+        
+        log_i = (
+        0.5*y_i.T.dot(cho_solve(C,y_i))
+        -np.sum(np.log(np.diag(C[0])))
+        - 0.5*N*np.log(2*np.pi)
+        )
+        
+        logs.append(log_i)
+    log_evidence = np.vstack(logs)
+    return log_evidence
 
 def gp_evidence(x, y, kernel, noise_var = 1e-6):
     """ Computes the GP log marginal likelihood """
@@ -164,28 +182,26 @@ def gp_evidence(x, y, kernel, noise_var = 1e-6):
     return log_evidence
     # will return a single scalar of the evidence for the scalar target
 
-def gp_ev_multidim(x, y, kernel, noise_var = 1e-6):
-    N = x.shape[0]
-    C = cho_factor(kernel(x, x) + noise_var*np.identity(N))    
-    D = y.shape[1]
-    logs = []
-    for dim in range(D):
-        y_i = y[:,dim]
-        y_i = y_i.reshape((-1,1))
-        
-        log_i = (
-        0.5*y_i.T.dot(cho_solve(C,y))
-        -np.sum(np.log(np.diag(C[0])))
-        - 0.5*N*np.log(2*np.pi)
-        )
-        
-        logs.append(log_i)
-    log_evidence = np.vstack(logs)
-    return log_evidence
 
-def sqexp_marginal(hyper : tuple(float, float), args : tuple(np.ndarray, np.ndarray)):
-    pass
-        
+# args: (x, y)  //   hyper: (theta, variance, noise_variance)
+def sqexp_marginal(hyper, x, y, noise_var):
+    # x, y, noise_var = args[0], args[1], args[2]
+    t = hyper[0]
+    var = hyper[1]
+    N = x.shape[0]
+    
+    kernel_eval = var * np.exp(-np.square(x - x.T) / t)
+
+    C = cho_factor(kernel_eval + noise_var*np.identity(N))
+    
+    log_evidence = (
+        0.5*y.T.dot(cho_solve(C, y))
+        - np.sum(np.log(np.diag(C[0])))
+        - 0.5*N*np.log(2*np.pi)
+    )
+
+    return -log_evidence
+
 
 
 if __name__ == "__main__":
@@ -193,8 +209,6 @@ if __name__ == "__main__":
     x_train, x_valid, x_test, y_train, y_valid, y_test, xdim, ydim = load_cyl2d_dataset()
     # print("shape of y: {}, {}".format(y_train.shape[0], y_train.shape[1]))
 
-    
-    
     # state is currently flattened, keep track of true shape for plotting
     state_shape = [ydim.shape[0], xdim.shape[0], 2]
 
@@ -235,7 +249,7 @@ if __name__ == "__main__":
     print('done')
     
     # plot the PCA converted targets
-    print(z_train.shape)
+    """ print(z_train.shape)
     z1, z2, z3, z4 = [], [], [], []
     x = range(1501)
     for z_point in z_train:
@@ -250,7 +264,7 @@ if __name__ == "__main__":
     axs[0,1].plot(x, z2); axs[0,1].set_title('z2')
     axs[1,0].plot(x, z3); axs[1,0].set_title('z3')
     axs[1,1].plot(x, z4); axs[1,1].set_title('z4')
-    plt.show()
+    plt.show() """
 
     '''
     For Q3: perform the multidimensional predictions for the latent states
@@ -270,7 +284,22 @@ if __name__ == "__main__":
     for Q5: find the hyperparameters of the sqexp kernel that maximize
     the likelihood of our training set observations as a function of the 
     hyperparamters of the kernel.
+
+    Using scipy.optimize.minimize:
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     '''
+
+    # perform multiple times, once for each scalar
+    results = []
+    for i in range(z_d):
+        z_i = z_test[:,i].reshape((-1,1))
+        data = (x_test, z_i, 1e-6) # using test data to find best hyperparamters
+        init_guess = np.array([1,1]) # initial guesses for values of theta, variance
+        print(init_guess.shape)
+        result = optim(sqexp_marginal, x0 = init_guess, args = data, method='L-BFGS-B')
+        print(result)
+        results.append(result)
+
 
     # do gp prediction over validation and test sets
     """ YOUR CODE HERE """
