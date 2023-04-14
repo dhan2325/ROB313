@@ -183,11 +183,10 @@ def gp_evidence(x, y, kernel, noise_var = 1e-6):
     # will return a single scalar of the evidence for the scalar target
 
 
-# args: (x, y)  //   hyper: (theta, variance, noise_variance)
+# args: (x, y)   //   hyper: (theta, variance, noise_variance)
 def sqexp_marginal(hyper, x, y, noise_var):
     # x, y, noise_var = args[0], args[1], args[2]
-    t = hyper[0]
-    var = hyper[1]
+    t, var = hyper
     N = x.shape[0]
     
     kernel_eval = var * np.exp(-np.square(x - x.T) / t)
@@ -200,9 +199,12 @@ def sqexp_marginal(hyper, x, y, noise_var):
         - 0.5*N*np.log(2*np.pi)
     )
 
-    return -log_evidence
+    return -1e5 * log_evidence
 
-
+def matern_kernel(hyper, x, y):
+    d = np.linalg.norm(x-y)
+    kernel_value = hyper[0] * (1 + np.sqrt(3) * d/hyper[1]) * np.exp(-np.sqrt(3) * d / hyper[1])
+    return kernel_value
 
 if __name__ == "__main__":
     # loading data
@@ -289,18 +291,27 @@ if __name__ == "__main__":
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     '''
 
-    # perform multiple times, once for each scalar
+    # testing for sqexp kernel
+    """ results = []
+    for i in range(z_d):
+        z_i = z_train[:,i].reshape((-1,1))
+        data = (x_train, z_i, 1e-6) # using test data to find best hyperparamters
+        init_guess = np.array([100,100]) # initial guesses for values of theta, variance
+        print(init_guess.shape)
+        result = optim(sqexp_marginal, x0 = init_guess, args = data, method='Nelder-Mead')
+        print(result)
+        results.append(result) """
+
+
+    # testing for matern kernel
     results = []
     for i in range(z_d):
-        z_i = z_test[:,i].reshape((-1,1))
-        data = (x_test, z_i, 1e-6) # using test data to find best hyperparamters
-        init_guess = np.array([1,1]) # initial guesses for values of theta, variance
-        print(init_guess.shape)
-        result = optim(sqexp_marginal, x0 = init_guess, args = data, method='L-BFGS-B')
+        z_i = z_train[:,i].reshape((-1,1))
+        data = (x_train, z_i) # using test data to find best hyperparamters
+        init_guess = np.array([1,1]) # variance, length scale
+        result = optim(matern_kernel, x0 = init_guess, args = data, method='Nelder-Mead')
         print(result)
         results.append(result)
-
-
     # do gp prediction over validation and test sets
     """ YOUR CODE HERE """
 

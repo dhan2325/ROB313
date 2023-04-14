@@ -127,8 +127,30 @@ To find the kernel hyperparamters that would work best for our model, type-II in
 There are multiple library functions in Python3 that are able to perform minimization. For this optimization problem, \verb+scipy.optimize.minimize+ was selected for a few reasons: the objective function is not required as an algebraic expression, arguments that are not constant during optimization can be specified separately, and the numeric method used to solve the optimization problem can easily be changed in case one doesn't work. In order to use the function, the \verb+gp_evidence+ function needed to be refactored slightly to fit the form requested by the \verb+scipy+ optimization function. The refactored form is shown below:
 
 \begin{verbatim}
-TODOOOOOO
+def sqexp_marginal(hyper, x, y, noise_var):
+    # x, y, noise_var = args[0], args[1], args[2]
+    t = hyper[0]
+    var = hyper[1]
+    N = x.shape[0]
+    
+    kernel_eval = hyper[1] * np.exp(-np.square(x - x.T) / hyper[0])
+
+    C = cho_factor(kernel_eval + noise_var*np.identity(N))
+    
+    log_evidence = (
+        0.5*y.T.dot(cho_solve(C, y))
+        - np.sum(np.log(np.diag(C[0])))
+        - 0.5*N*np.log(2*np.pi)
+    )
+
+    return -1e5 * log_evidence
 \end{verbatim}
+
+The output of the function was increased in magnitude to prevent numeric underflow and multiplied by a factor of -1 to effectively find the maximum log-marginal my minimizing its negative. Apart from that, this function is exactly like the \verb+gp_evidence+ function provided except for the fact that it takes arguments in the format expected by the scipy optimizer.
+
+Using various numeric methods and starting points yielded drastically different results, and even in cases where several iterations of the selected algorithm was exectued, the optimization did not carry on for long before terminating. This suggests that there may not be a single pair of optimal hyperparameters for the squared exponential kernel that maximizes the marginal for this particular dataset, which would lead the optimization to get evaluations of the Hessian close to zero and cause numeric errors and/or terminate the algorithm. As such, the default values of 1 were kept for both theta and variance for all four latent states.
+
+
 
 
 
