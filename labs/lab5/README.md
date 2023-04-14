@@ -1,0 +1,3 @@
+all python code is provided in pca_gp_rom.py with annotations on what each chunk of code in the main block is meant to do. Some blocks are commented out to save runtime while working on specific tasks. The only import added to the starter code is scipy.optimize.minimize used for question 5 to find optimal hyperparamters.
+
+(please note that the assignment is not competed in its entirety. This was due on a Friday and I have an exam Saturday.)

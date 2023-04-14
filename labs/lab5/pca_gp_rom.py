@@ -292,7 +292,7 @@ if __name__ == "__main__":
     '''
 
     # testing for sqexp kernel
-    """ results = []
+    results = []
     for i in range(z_d):
         z_i = z_train[:,i].reshape((-1,1))
         data = (x_train, z_i, 1e-6) # using test data to find best hyperparamters
@@ -300,7 +300,7 @@ if __name__ == "__main__":
         print(init_guess.shape)
         result = optim(sqexp_marginal, x0 = init_guess, args = data, method='Nelder-Mead')
         print(result)
-        results.append(result) """
+        results.append(result)
 
 
     # testing for matern kernel
@@ -312,6 +312,7 @@ if __name__ == "__main__":
         result = optim(matern_kernel, x0 = init_guess, args = data, method='Nelder-Mead')
         print(result)
         results.append(result)
+    
     # do gp prediction over validation and test sets
     """ YOUR CODE HERE """
 
