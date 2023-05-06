@@ -1,28 +1,4 @@
-\documentclass{article}
-\usepackage[utf8]{inputenc}
-\setlength{\parskip}{12pt}
-
-\usepackage{geometry}
-\geometry{margin = 0.7in}
-
-\usepackage{float}
-\usepackage{graphicx}
-\graphicspath{{./images/}}
-
-\usepackage{mathtools, amssymb, amsmath}
-\DeclareMathOperator*{\argmax}{arg\,max}
-\DeclareMathOperator*{\argmin}{arg\,min}
-
-\usepackage{caption}
-\usepackage{subcaption}
-
-\usepackage{listings}
-\lstset{
-basicstyle=\small\ttfamily,
-columns=flexible,
-breaklines=true
-}
-
+\include{../jhan_preamble.tex}
 
 \title{ROB313: Assignment 1}
 \author{Daniel Han: 1006842534}
@@ -33,7 +9,7 @@ breaklines=true
 \maketitle
 
 
-\section{Thikonov Regularization}
+\newsec{Thikonov Regularization}
 To find the $\textbf{w}$ that minimizes the Tikhonov regularized cost, we can follow a similar procedure as in the course notes and take the partial derivative of the regularized cost with respect to the cost vector, and solve for the weight vector when the partial derivative has all components set to zero. To make the process easier, the optimization problem can be rewritten in vector terms as shown below:
 
 \begin{equation}
@@ -54,7 +30,7 @@ As one may have expected, the expression is very similar to the expression deriv
 
 For which the inverse can be computed using a singular value decomposition.
 
-\section{Minimizing Objective Function}
+\newsec{Minimizing Objective Function}
 In class, an expression for $\boldsymbol\alpha$ was found using the dual representation in which the loss function was rewritten entirely as a function of $\boldsymbol\alpha$ and $\mathbf{\Phi}$ by expressing the weight vector, $\mathbf{w}$ in terms of $\boldsymbol\alpha$. For the sake of comparison, the values of $\boldsymbol\alpha$ can be estimated by minimizing an objective function written in terms of the vector $\boldsymbol\alpha$ and the kernel terms directly. The regularized cost function to be optimized in terms of $\boldsymbol\alpha$ and the kernel can be written in vectoral form as shown below:
 
 \begin{equation}
@@ -76,7 +52,7 @@ If the matrix premultiplying alpha can be proven to be invertible, then the valu
 The expression is different than the one obtained with the dual formulation. The expression obtained above treats each of the kernel evaluations as one of $N$ features, whose weights are being optimized for (with an added regularization $\lambda$ term). In the Dual formation, the weights being regularized are associated with features in the Reproducing Kernel Hilbert Space.
 
 \iftrue
-\section{Radial Basis Function with Gaussian Kernel}
+\newsec{Radial Basis Function with Gaussian Kernel}
 For the third question, we are forming a Radial Basis Function regression model, (RBF), for which the predictions can be expressed in terms of a kernel $k$ and the alpha vector $\boldsymbol\alpha$:
 
 \begin{equation}
@@ -160,7 +136,7 @@ For both datasets, the optimal value of $\lambda$ was 0.001, the smallest value 
 
 \pagebreak
 \fi
-\section{Orthogonal Matching Pursuit}
+\newsec{Orthogonal Matching Pursuit}
 For the fourth question, we were tasked with implementing a greedy algorithm using a set of basis functions of our own design. In order to make justifiable decisions regarding the selection of basis functions, the \verb+mauna_loa+ dataset was plotted in order to make observations about the dataset (plot provided below). In order to form a set of basis functions, it was assumed that there was some underlying function for the dataset, and that each data point was sampled from this underlying function (with the addition of some error). With this assumption, by observing the data, one could presumably construct a numeric function from a set of basis functions that closely resembles the underlying function, rendering our model effective in interpolation and extrapolation.
 
 \begin{figure}[H]

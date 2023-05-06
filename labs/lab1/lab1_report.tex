@@ -1,9 +1,4 @@
-\documentclass{article}
-\usepackage[utf8]{inputenc}
-\setlength{\parskip}{12pt}
-
-\usepackage{graphicx}
-\graphicspath{{./images/}}
+\include{../jhan_preamble.tex}
 
 \title{ROB313: Assignment 1}
 \author{Daniel Han: 1006842534}
@@ -13,12 +8,12 @@
 
 \maketitle
 
-\section*{Code Organization}
+\newsec*{Code Organization}
 All scripts make use only of modules either mentioned in the assignment document of inherent to Python 3/Conda. In terms of running the code, each Python file is mean to be run individually to perform a specific (sub)question, and has no dependencies other than assuming that a copy of the data folder provided is also available in the working directory. Some files output to text files and/or produce graphs. MatPlotLib graphs will be shown to the user upon running the script, and text files will be stored in the working directory. Each question/sub-question has an associate script, which can be found in the zip submission.
 
 To ensure results were replicable, all randomizations were done using numpy, and the randomization seed used was my student number.
 
-\section{Question 1}
+\newsec{Question 1}
 For question 1, the code was compartmentalized into modular functions. The computing of the L1, L2 norms could be done using \texttt{numpy.linalg.norm()}. RMSE loss was computed manually (without vectorization) without a large hit to the runtime. A single function was written to determine the costs for various values of $k$. The function could be passed a value of $k_max$, and the function would determine the RMSE loss for all values of $k$ from $1$ to $k_max$. The reasoning behind this was that determining the $i$ nearest neighbours would have all the information required to perform the $i-1$ nearest neighbours.
 
 Thus, the functions were written to analyze an entire dataset at once, for multiple different values of $k$, to determine which would produce the smallest RMSE loss.
@@ -62,7 +57,7 @@ Using the Rosenbrock dataset, it was not as immediately obvious which value of $
 \subsection{Puma: lab1\_q1\_3.py}
 The Puma arm dataset was more computationally expensive, given that it had a two dimensional input and a 31-dimensional output. The same approach was taken for the third dataset, and it was found that larger values of $k$ consistently provided lower errors for values of $k \leq 50$. The results suggest that there is likely either a fault in the data or a larger value of $k$ will prove to be an inflection point, but we did not have the computation power or time required to perform a more extensive study. This appeared to be the case using both l1 and l2 distance metrics, yielding an RMSE error of 
 
-\section{Question 2: lab1\_q2.py}
+\newsec{Question 2: lab1\_q2.py}
 To improve the runtime, a k-dimensional tree (also referred to as a kd-tree) was implemented to store and query for the k nearest neighbours. To do so, the \texttt{sklearn.neighbors.KDTree} class was used. The kd-tree showed greatly improved runtimes compared to the brute-force method. For the brute force method, every point in the test set needed to be added to an priority queue, and each point in the test/validation set would require its own priority queue.
 
 \begin{figure} [h !]
@@ -71,10 +66,10 @@ To improve the runtime, a k-dimensional tree (also referred to as a kd-tree) was
 \end{figure}
 
 
-\section{Question 3: lab1\_q3.py}
+\newsec{Question 3: lab1\_q3.py}
 This question was unfortunately not completed. Progress is shown in the python document, but bugs in reading the output of the kdtree queries caused non-sensible results.
 
-\section{Question 4: lab1\_q4.py}
+\newsec{Question 4: lab1\_q4.py}
 Not completed
 
 

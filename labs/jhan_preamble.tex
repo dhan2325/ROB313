@@ -1,0 +1,62 @@
+% the jhan preamble
+
+% import packages
+\documentclass[oneside]{article}
+\usepackage[utf8]{inputenc}
+\setlength{\parskip}{12pt}
+
+\usepackage{geometry}
+
+
+\usepackage{nameref}
+\usepackage[myheadings]{fancyhdr}
+
+\usepackage{float}
+\usepackage{graphicx}
+\graphicspath{{./images/}}
+
+\usepackage{mathtools, amssymb, amsmath}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{listings}
+\lstset{
+basicstyle=\small\ttfamily,
+columns=flexible,
+breaklines=true
+}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+% self-defined macros
+\makeatletter
+\newcommand*{\currentname}{\@currentlabelname}
+\makeatother
+
+\newcommand{\mbf}[1]{\mathbf{#1}}
+
+\newcommand{\setname}[1]{\def\curname{#1}}
+\newcommand{\newsec}[1]{\section{#1}\setname{#1}}
+\def\curname{Introduction}
+
+
+
+% TODO: find a font that I like
+\renewcommand{\familydefault}{\sfdefault}
+
+% page style, headings
+\geometry{margin = 1in}
+\fancyfoot[CO, CE]{\thepage}
+\fancyhead[RE, RO]{Han, Junyoung}
+\fancyhead[LE, LO]{\curname}
+\pagestyle{fancy}
+
+

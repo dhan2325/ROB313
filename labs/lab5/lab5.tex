@@ -1,27 +1,4 @@
-\documentclass{article}
-\usepackage[utf8]{inputenc}
-\setlength{\parskip}{12pt}
-
-\usepackage{geometry}
-\geometry{margin = 0.7in}
-
-\usepackage{float}
-\usepackage{graphicx}
-\graphicspath{{./images/}}
-
-\usepackage{mathtools, amssymb, amsmath}
-\DeclareMathOperator*{\argmax}{arg\,max}
-\DeclareMathOperator*{\argmin}{arg\,min}
-
-\usepackage{caption}
-\usepackage{subcaption}
-
-\usepackage{listings}
-\lstset{
-basicstyle=\small\ttfamily,
-columns=flexible,
-breaklines=true
-}
+\include{../jhan_preamble.tex}
 
 
 \title{ROB313: Assignment 4}
@@ -31,14 +8,17 @@ breaklines=true
 \begin{document}
 
 \maketitle
+\thispagestyle{empty}
+\newpage
 
+\tableofcontents \newpage
 
-\section{Data Partitioning}
+\newsec{Data Partitioning}
 The proposed data partitioning allocates 1001 data points for training, 200 for validation, and 300 for testing. While the proposed partitioning splits the data into reasonably sized proportions between the three subsets, the subsets are split chronologically, which could be disadvantageous, since it forces the model to train on the first 1001 time steps, and then the validation and test sets would just be measuring its ability to extrapolate beyond the time steps included in the training data.
 
 It would be more appropriate to ensure that data points from various periods in the flow are included in each of the three data subsets. This can be done in a couple of ways. One could iterative assign each time step's measurement to one of the three sets, starting with time step 0 and working to the final time frame (i.e. assign 10 points to training, 2 points to validation, 3 points to testing, etc.). Alternatively, one could also randomize the ordering of the data points, then partition the reordered dataset as done previously. In any case, it would be beneficial to have a partitioning method that does not explicitly force the model to extrapolate to predict on the validation and test sets, and randomizing the ordering of the data points could improve the probability of each of the subsets having greater variety in the time step from which their data points were drawn.
 
-\section{PCA of flow data}
+\newsec{PCA of flow data}
 \subsection{Determining PCA matrix for the dataset}
 To perform a Gaussian Process analysis on a dataset with 25600 dimensions is not computationally viable for most parties not having access to a NASA supercomputer, which the author did not (at least at the time of writing this document). Thus, to save on computation without disregarding performance, a PCA could be performed to reduce the dimensionality of the dataset to a more manageable number. The number of reduced dimensions used was denoted $z_d$ (kept at a value of 4 for this assignment). To perform PCA, a vector $\mathbf{b} \in \mathbb{R}^{D}$ and a matrix $\mathbf{U} \in \mathbb{R}^{d \times D}$ were required to compute $\mathbf{z}$, the reduced dimension data points as $\mathbf{z} = \mathbf{U^T}(\mathbf{y} - \mathbf{b})$.
 
@@ -53,8 +33,8 @@ To get a better qualitative undestanding of the four latent states, each of the 
 \caption{Plots of the four latent states over the flow sequence}
 \end{center}
 \end{figure}
-
-\section{Element-wise predictions for the GP}
+\newpage
+\newsec{Element-wise predictions for the GP}
 Having been provided code that could perform a GP prediction on a scalar input, we were tasked with extending this function to work for our multi-dimensional PCA representation of the original data. Denoting our reduced dimensionality as $D = 4$, we could simply treat each of the $D$ features as independent scalars and use the code provided to compute the posterior $\boldsymbol{\mu}$ and $\mathbf{\Sigma}$ for each of the four features. Then, stacking the resulting mean vectors and covariance matrices, we would have, in two matrices, our predictions for the distributions of each test point in succinct form.
 
 The code provided was used without any significant changes to find the mean vector and covariance prediction for each of the latent states independently. A minor implementation change was made to reshape the x matrices only for the functions that required them. For instance, for the squared exponent kernel provided, a 1-D array inputs were reshaped to 2-D array inputs with the second axis being of length one. The code used in provided below.
@@ -97,7 +77,7 @@ def gp_pred_multidim(x : np.ndarray, y, x_test, kernel, noise_var = 1e-6):
 \end{verbatim}
 
 
-\section{Element-wise log evidence}
+\newsec{Element-wise log evidence}
 Following the same procedure as was done for the covariance and mean predictions, the provided \verb+gp_evidence+ function was modified to deal with multidimensional targets. The modified function definition is shown below.
 
 \begin{verbatim}
@@ -121,7 +101,7 @@ def gp_ev_multidim(x, y, kernel, noise_var = 1e-6):
     return log_evidence
 \end{verbatim}
 
-\section{Optimizing kernel hyperparamters with type-II inference}
+\newsec{Optimizing kernel hyperparamters with type-II inference}
 To find the kernel hyperparamters that would work best for our model, type-II inference was used to determine the hyperparamters that would maximize the marginal likelihood. Finding the hyperparameters that work best for the model can then be treated as an optimization problem looking to maximize the marginal likelihood over the space of hyperparamters.
 
 There are multiple library functions in Python3 that are able to perform minimization. For this optimization problem, \verb+scipy.optimize.minimize+ was selected for a few reasons: the objective function is not required as an algebraic expression, arguments that are not constant during optimization can be specified separately, and the numeric method used to solve the optimization problem can easily be changed in case one doesn't work. In order to use the function, the \verb+gp_evidence+ function needed to be refactored slightly to fit the form requested by the \verb+scipy+ optimization function. The refactored form is shown below:

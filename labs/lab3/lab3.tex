@@ -1,28 +1,4 @@
-\documentclass{article}
-\usepackage[utf8]{inputenc}
-\setlength{\parskip}{12pt}
-
-\usepackage{geometry}
-\geometry{margin = 0.7in}
-
-\usepackage{float}
-\usepackage{graphicx}
-\graphicspath{{./images/}}
-
-\usepackage{mathtools, amssymb, amsmath}
-\DeclareMathOperator*{\argmax}{arg\,max}
-\DeclareMathOperator*{\argmin}{arg\,min}
-
-\usepackage{caption}
-\usepackage{subcaption}
-
-\usepackage{listings}
-\lstset{
-basicstyle=\small\ttfamily,
-columns=flexible,
-breaklines=true
-}
-
+\include{../jhan_preamble.tex}
 
 \title{ROB313: Assignment 3}
 \author{Daniel Han: 1006842534}
@@ -32,7 +8,7 @@ breaklines=true
 
 \maketitle
 
-\section{Gradient Descent Variations}
+\newsec{Gradient Descent Variations}
 
 \subsection{Setup/Mathematical Background}
 We were tasked with implementing different variations of gradient descent with different hyperparameters to measure the performance of different methods across the hyperparameter grids for each using the \verb+pumadyn32nm+ dataset. The dataset, with 32-element inputs and scalar outputs, was used to train a linear model regression model with minimization of least-squares loss. Predictions for a given input would be calculated as the inner product of the model's weight vector and the input vector. The loss function to be minimized, in vectorized form, can be written as shown below, where $\mathbf{X}$ is the matrix whose rows are the inputs in the training dataset.
@@ -69,7 +45,7 @@ In terms of computation time, all four methods with their optimal learning rates
 
 In summary, while higher learning rates do yield faster convergence, they also tend to yield greater final errors from the analytical solution. Thus for each application, it is up to the user to determine an appropriate learning rate for the task at hand depending on how they value the runtime/accuracy tradeoff.
 
-\section{Figures}
+\newsec{Figures}
 Plots of the loss of each variation of gradient descent (with different hyperparamaters) across epochs are provided below.
 
 \begin{figure}
@@ -113,7 +89,7 @@ Plots of the loss of each variation of gradient descent (with different hyperpar
 \end{figure}
 
 
-\section{Logistic Regression on iris classification}
+\newsec{Logistic Regression on iris classification}
 
 \subsection{Setup/Mathematical Background}
 In this section, the task was to perform Gradient Descent to determine of a logistic regression model for teh iris dataset. The classification problem was solved using a Bernoulli likelihood function using a logistic sigmoid. Gradient descent was applied to determine the weight vector that maximized the log-Bernoulli-likelihood, which in turn would also be the weight vector that maximized the Bernoulli-likelihood since the logarithm is a monotonically increasing function.
